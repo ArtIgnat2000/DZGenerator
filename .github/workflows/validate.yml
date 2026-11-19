@@ -57,6 +57,18 @@ jobs:
           done
           echo "All 6 source previews present"
 
+      - name: Check release version
+        run: |
+          set -e
+          FILE_VER=$(cat VERSION | tr -d '[:space:]')
+          HTML_VER=$(grep -oE "const VERSION='[^']+'" V-labs-generator.html | head -1 | sed "s/const VERSION='//;s/'//")
+          echo "VERSION file: $FILE_VER"
+          echo "Generator VERSION: $HTML_VER"
+          test -n "$FILE_VER" || { echo "::error::VERSION file is empty"; exit 1; }
+          test -n "$HTML_VER" || { echo "::error::VERSION const not found in generator"; exit 1; }
+          test "$FILE_VER" = "$HTML_VER" || { echo "::error::VERSION mismatch: file=$FILE_VER html=$HTML_VER"; exit 1; }
+          grep -q 'id="ver"' V-labs-generator.html && echo "Version badge on site OK"
+
       - name: Check generator file size
         run: |
           SIZE=$(stat -c%s V-labs-generator.html)
