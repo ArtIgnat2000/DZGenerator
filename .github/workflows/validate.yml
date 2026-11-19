@@ -1,0 +1,66 @@
+name: Validate generator
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          import re, pathlib, sys
+          p = pathlib.Path('V-labs-generator.html').read_text(encoding='utf-8')
+          m = re.search(r'<script>(.*)</script>', p, re.S)
+          if not m:
+              print('::error::No <script> block found in V-labs-generator.html')
+              sys.exit(1)
+          pathlib.Path('/tmp/check.js').write_text(m.group(1), encoding='utf-8')
+          print(f'Extracted {len(m.group(1))} chars of JS')
+          PY
+          node --check /tmp/check.js
+          echo "JS syntax OK"
+
+      - name: Check standalone (no CDN / external scripts)
+        run: |
+          if grep -qE '<script[^>]+src=' V-labs-generator.html; then
+            echo "::error::External <script src=...> found — generator must stay standalone"
+            exit 1
+          fi
+          if grep -qE '<link[^>]+href="https?://' V-labs-generator.html; then
+            echo "::error::External stylesheet found — generator must stay standalone"
+            exit 1
+          fi
+          echo "No external scripts/styles — OK"
+
+      - name: Check key invariants
+        run: |
+          set -e
+          grep -q 'vlabs-homework-v1' V-labs-generator.html && echo "localStorage key OK"
+          grep -q '520px' V-labs-generator.html && grep -q '980px' V-labs-generator.html && echo "Print size 520x980 OK"
+          grep -q 'paginatePrint' V-labs-generator.html && echo "paginatePrint OK"
+          COUNT=$(grep -o 'data:image' V-labs-generator.html | wc -l)
+          echo "Embedded previews: $COUNT"
+          test "$COUNT" -ge 6
+          for f in previews/slovo.jpg previews/chislo.jpg previews/buffalo.jpg previews/oil.jpg previews/bukvarinsk.jpg previews/ovz.jpg; do
+            test -f "$f" || { echo "::error::Missing $f"; exit 1; }
+          done
+          echo "All 6 source previews present"
+
+      - name: Check generator file size
+        run: |
+          SIZE=$(stat -c%s V-labs-generator.html)
+          echo "V-labs-generator.html: $SIZE bytes"
+          if [ "$SIZE" -gt 2000000 ]; then
+            echo "::warning::Generator is larger than 2 MB"
+          fi
