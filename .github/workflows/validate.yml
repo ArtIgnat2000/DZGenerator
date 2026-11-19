@@ -49,6 +49,7 @@ jobs:
           grep -q 'vlabs-homework-v1' V-labs-generator.html && echo "localStorage key OK"
           grep -q '520px' V-labs-generator.html && grep -q '980px' V-labs-generator.html && echo "Print size 520x980 OK"
           grep -q 'paginatePrint' V-labs-generator.html && echo "paginatePrint OK"
+          grep -q 'const LESSONS=' V-labs-generator.html && echo "Lesson templates OK"
           COUNT=$(grep -o 'data:image' V-labs-generator.html | wc -l)
           echo "Embedded previews: $COUNT"
           test "$COUNT" -ge 6
