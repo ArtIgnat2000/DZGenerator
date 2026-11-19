@@ -81,6 +81,24 @@ jobs:
           grep -q 'href="lessons/index.html"' V-labs-generator.html && echo "Generator links to lesson pages OK"
           echo "Lesson pages OK"
 
+      - name: Check Scratch game packages
+        run: |
+          python3 -m py_compile scripts/build-games.py
+          python3 - <<'PY'
+          import glob, json, zipfile
+          files = sorted(glob.glob('lessons/games/*.sb3'))
+          assert len(files) == 8, f'Expected 8 Scratch projects, got {len(files)}'
+          for path in files:
+              with zipfile.ZipFile(path) as archive:
+                  project = json.loads(archive.read('project.json'))
+                  names = set(archive.namelist())
+                  assert len(project['targets']) >= 2, f'{path}: missing sprites'
+                  for target in project['targets']:
+                      for asset in target['costumes'] + target['sounds']:
+                          assert asset['md5ext'] in names, f'{path}: missing {asset["md5ext"]}'
+                  print(f'{path}: valid project, {len(project["targets"])} targets')
+          PY
+
       - name: Check generator file size
         run: |
           SIZE=$(stat -c%s V-labs-generator.html)
