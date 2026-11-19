@@ -93,10 +93,17 @@ jobs:
                   project = json.loads(archive.read('project.json'))
                   names = set(archive.namelist())
                   assert len(project['targets']) >= 2, f'{path}: missing sprites'
+                  assert project['extensions'] == [], f'{path}: unexpected Scratch extensions'
                   for target in project['targets']:
                       for asset in target['costumes'] + target['sounds']:
                           assert asset['md5ext'] in names, f'{path}: missing {asset["md5ext"]}'
-                  print(f'{path}: valid project, {len(project["targets"])} targets')
+                          if asset['dataFormat'] == 'svg':
+                              svg = archive.read(asset['md5ext']).decode('utf-8')
+                              for unsupported in ('<text', '<filter', 'Gradient', 'rx='):
+                                  assert unsupported not in svg, f'{path}: unsupported SVG feature {unsupported}'
+                      for block in target['blocks'].values():
+                          assert not block['opcode'].startswith('procedures_'), f'{path}: custom Scratch block'
+                  print(f'{path}: valid core-block project, {len(project["targets"])} targets')
           PY
 
       - name: Check generator file size
