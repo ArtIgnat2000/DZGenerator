@@ -70,6 +70,17 @@ jobs:
           test "$FILE_VER" = "$HTML_VER" || { echo "::error::VERSION mismatch: file=$FILE_VER html=$HTML_VER"; exit 1; }
           grep -q 'id="ver"' V-labs-generator.html && echo "Version badge on site OK"
 
+      - name: Check lesson pages are up to date
+        run: |
+          set -e
+          node scripts/build-lessons.js --check
+          for i in 1 2 3 4 5 6 7 8; do
+            test -f "lessons/$i.html" || { echo "::error::Missing lessons/$i.html"; exit 1; }
+          done
+          test -f lessons/index.html || { echo "::error::Missing lessons/index.html"; exit 1; }
+          grep -q 'href="lessons/index.html"' V-labs-generator.html && echo "Generator links to lesson pages OK"
+          echo "Lesson pages OK"
+
       - name: Check generator file size
         run: |
           SIZE=$(stat -c%s V-labs-generator.html)
