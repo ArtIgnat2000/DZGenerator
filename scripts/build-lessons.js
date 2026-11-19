@@ -25,7 +25,11 @@ if (start < 0 || end < 0) {
 const LESSONS = new Function(`${src.slice(start, end + 3)}\nreturn LESSONS;`)();
 
 const GAME_DESC = {
-  'Солнце и дождь': 'Интерактивная сценка: солнце выходит по флагу, дождь — по клику на облако.',
+  'Солнце и дождь': 'Интерактивная сценка: сцена реагирует на флаг, клик по герою и нажатие пробела.',
+  'Космический маршрут': 'Управляй исследователем стрелками, найди маяк и потренируй координаты и движение.',
+  'Театр настроений': 'Персонаж меняет костюм по клику — каждый образ открывает новую роль.',
+  'Следопыт за мышью': 'Герой следует за указателем и реагирует на нажатие мыши.',
+  'Математический оракул': 'Ответь на вопрос: проект проверит ответ оператором сравнения.',
   'Радуга по сообщению': 'Радуга появляется по пробелу через сообщения.',
   'Лабиринт': 'Герой проходит лабиринт стрелками: стены не пускают, на финише — «Победа!».',
   'Гонки по трассе': 'Гонка по трассе: управление направлением и скоростью.',
@@ -46,6 +50,7 @@ const GAME_DESC = {
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const list = s => s.split('; ').map(x => `<li>${esc(x.trim())}</li>`).join('');
 const SCRATCH = 'https://scratch.mit.edu/projects/editor/';
+const GAME_FILES = {1:'01-events.sb3',2:'02-motion.sb3',3:'03-looks.sb3',4:'04-sound.sb3',5:'05-control.sb3',6:'06-sensing.sb3',7:'07-operators.sb3',8:'08-data.sb3'};
 
 const CSS = `:root{--navy:#142f43;--teal:#168574;--line:#dce4e8;--muted:#647889;--bg:#f0f4f5}
 *{box-sizing:border-box}
@@ -68,6 +73,7 @@ li{margin:4px 0}
 .game p{margin:0 0 10px;color:var(--muted);font-size:14px}
 .btn{display:inline-block;background:var(--teal);color:#fff;text-decoration:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600}
 .btn.ghost{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+.download-note{margin:8px 0 0;color:var(--muted);font-size:12px}
 .nav{display:flex;justify-content:space-between;gap:10px;margin:22px 0 0;font-size:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .grid a{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--navy)}
@@ -88,7 +94,7 @@ const files = [];
 
 // Страница урока
 for (const l of LESSONS) {
-  const games = l.games.map(g => `<div class="game"><b>${esc(g)}</b><p>${esc(GAME_DESC[g] || '')}</p></div>`).join('');
+  const games = l.games.map((g, i) => `<div class="game"><b>${esc(g)}</b><p>${esc(GAME_DESC[g] || '')}</p>${i === 0 ? `<a class="btn" href="games/${GAME_FILES[l.n]}" download>Скачать игру для Scratch (.sb3)</a><p class="download-note">Открой файл в Scratch 3.0: Файл → Загрузить с компьютера.</p>` : ''}</div>`).join('');
   const prev = LESSONS.find(x => x.n === l.n - 1);
   const next = LESSONS.find(x => x.n === l.n + 1);
   const nav = `<div class="nav"><span>${prev ? `<a class="back" href="${prev.n}.html">← Урок ${prev.n}. ${esc(prev.title)}</a>` : ''}</span><span>${next ? `<a class="back" href="${next.n}.html">Урок ${next.n}. ${esc(next.title)} →</a>` : ''}</span></div>`;
@@ -112,12 +118,14 @@ ${nav}
 
 // Оглавление
 const cards = LESSONS.map(l => `<a href="${l.n}.html"><b>Урок ${l.n}. ${esc(l.title)}</b><span>${esc(l.goal)}</span></a>`).join('');
+const gameCards = LESSONS.map(l => `<div class="game"><b>Урок ${l.n}. ${esc(l.title)}</b><p>${esc(l.games[0])}</p><a class="btn" href="games/${GAME_FILES[l.n]}" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="${l.n}.html">Страница урока</a></div>`).join('');
 files.push(['index.html', `${head('Уроки Scratch · V-labs')}
 <a class="back" href="../V-labs-generator.html">← К генератору заданий</a>
 <h1>Уроки Scratch</h1>
 <p class="goal">Программа курса: каждый тип блоков разбираем через практику. Выберите урок — там блоки, практика, идея и игры, которые собираем на занятии.</p>
 <div class="grid">${cards}</div>
-<footer>V-labs · Scratch 3.0 · ${LESSONS.length} уроков</footer>
+<div class="card"><h2>Все проекты Scratch для скачивания</h2><p class="goal">Загрузите стартовый проект нужного урока. На странице урока кнопка скачивания также находится рядом с описанием игры.</p><div class="grid">${gameCards}</div></div>
+<footer>V-labs · Scratch 3.0 · ${LESSONS.length} уроков и стартовых проектов</footer>
 </main></body></html>
 `]);
 
