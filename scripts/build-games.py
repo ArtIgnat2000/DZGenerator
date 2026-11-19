@@ -18,26 +18,58 @@ THEMES = [
     ('08-data', 'Дневник желаний', 'ДАННЫЕ', 'Запиши желание: проект сохранит его в список.', ['#203650','#278b80'], '✎'),
 ]
 
-# Original vector artwork; all art is embedded in the .sb3 and works offline.
+# Scratch-compatible artwork: only basic SVG shapes supported by Scratch Paint.
+# No SVG text, filters, gradients, rounded-rectangle attributes, or external assets.
 def backdrop_svg(index, title, kicker, colors, icon):
-    a,b = colors
-    stars = ''.join(f'<circle cx="{(i*73+29)%480}" cy="{(i*47+19)%220}" r="{1+(i%3)*.6}" fill="#fff" opacity="{.25+(i%5)*.1}"/>' for i in range(26))
-    extras = '<path d="M70 224 C125 176 160 270 224 220 S320 176 399 221" fill="none" stroke="#9cefff" stroke-width="4" stroke-dasharray="3 12" stroke-linecap="round" opacity=".65"/><circle cx="399" cy="221" r="23" fill="#7cf6d3" opacity=".16"/><path d="M399 195v42m-10-32 10-10 10 10" stroke="#b7ffeb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' if index == 1 else ''
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360"><defs><linearGradient id="bg" x2=".9" y2="1"><stop stop-color="{a}"/><stop offset="1" stop-color="{b}"/></linearGradient><radialGradient id="glow"><stop stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="480" height="360" fill="url(#bg)"/><circle cx="370" cy="112" r="148" fill="url(#glow)"/>{stars}{extras}<path d="M0 260 Q85 222 170 264 T340 249 T480 257 V360 H0Z" fill="#07152d" opacity=".42"/><path d="M0 298 Q100 275 215 300 T480 288 V360 H0Z" fill="#07152d" opacity=".32"/><rect x="18" y="18" width="444" height="72" rx="20" fill="#07152d" opacity=".32"/><text x="38" y="43" fill="#9af0dc" font-family="Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="2">V-LABS  /  SCRATCH 3</text><text x="38" y="72" fill="#fff" font-family="Arial,sans-serif" font-size="22" font-weight="700">{title}</text><text x="435" y="59" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="28">{icon}</text><rect x="20" y="318" width="440" height="24" rx="12" fill="#07152d" opacity=".48"/><text x="240" y="335" text-anchor="middle" fill="#e7f7ff" font-family="Arial,sans-serif" font-size="10" letter-spacing="1.5">{kicker}  •  ИГРАЙ И ИССЛЕДУЙ</text></svg>'''
+    a, b = colors
+    stars = ''.join(
+        f'<circle cx="{(i*73+29)%480}" cy="{(i*47+19)%220}" r="{1+(i%3)*.6}" fill="#ffffff" opacity="{.3+(i%4)*.12}"/>'
+        for i in range(24)
+    )
+    scene = ''
+    if index == 1:
+        scene = '<path d="M58 230 C120 176 166 270 228 220 S330 176 395 220" fill="none" stroke="#9cefff" stroke-width="4" stroke-dasharray="3 12" stroke-linecap="round"/><circle cx="395" cy="220" r="20" fill="#7cf6d3" opacity=".35"/><path d="M395 194v42m-10-32 10-10 10 10" fill="none" stroke="#b7ffeb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+    elif index == 2:
+        scene = '<path d="M0 0h95v250H0Z" fill="#a83e72"/><path d="M385 0h95v250h-95Z" fill="#a83e72"/><path d="M95 0h42v235H95Zm248 0h42v235h-42Z" fill="#e77c9f"/><path d="M0 238q240 54 480 0v34q-240 56-480 0Z" fill="#f5b86e"/>'
+    elif index == 3:
+        scene = '<path d="M64 224h42v-48H64Zm68 0h42v-96h-42Zm68 0h42V96h-42Zm68 0h42v-72h-42Zm68 0h42v-124h-42Z" fill="#71e4d0" opacity=".75"/><path d="M55 231h334" stroke="#d2fff4" stroke-width="4"/>'
+    elif index == 4:
+        scene = '<path d="M88 82 112 44l25 38-25 39Z" fill="#ffbf57"/><path d="M88 82 43 100l45 15 24-33Z" fill="#ff755f"/><path d="M137 82 176 62l-22 38-17-18Z" fill="#ffd77b"/><circle cx="113" cy="82" r="10" fill="#fff6c7"/>'
+    elif index == 5:
+        scene = '<circle cx="360" cy="158" r="68" fill="none" stroke="#68e7ce" stroke-width="3" opacity=".5"/><circle cx="360" cy="158" r="42" fill="none" stroke="#a1fff0" stroke-width="3" opacity=".65"/><circle cx="360" cy="158" r="12" fill="#fff0a0"/>'
+    elif index == 6:
+        scene = '<circle cx="356" cy="154" r="58" fill="#a98aff" opacity=".8"/><circle cx="356" cy="154" r="42" fill="#f5eaff"/><path d="M335 139c2-17 14-25 27-25 16 0 27 11 27 25 0 11-8 18-17 24-7 5-10 9-10 17" fill="none" stroke="#523c82" stroke-width="8" stroke-linecap="round"/><circle cx="362" cy="198" r="5" fill="#523c82"/>'
+    else:
+        scene = '<path d="M315 86h78l37 37v133H315Z" fill="#f8fbff"/><path d="M393 86v37h37" fill="#bcefe4"/><path d="M336 157h67m-67 24h67m-67 24h48" stroke="#51b69e" stroke-width="5" stroke-linecap="round"/><path d="m344 261 7-25 60-60 18 18-60 60Z" fill="#ffbd62"/>'
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">'
+        f'<rect width="480" height="360" fill="{a}"/><path d="M0 0h480v210H0Z" fill="{b}" opacity=".48"/>'
+        f'{stars}{scene}<path d="M0 260Q85 222 170 264T340 249T480 257V360H0Z" fill="#173850" opacity=".58"/>'
+        f'<path d="M0 298Q100 275 215 300T480 288V360H0Z" fill="#0f6c6b" opacity=".62"/>'
+        f'<path d="M0 315Q92 282 178 315T337 315T480 315V360H0Z" fill="#0b535b" opacity=".5"/></svg>'
+    )
+
 
 def events_backdrop(scene):
-    sky = {'sunny':'#82d6eb', 'rainy':'#526f9e', 'rainbow':'#88cbe8'}[scene]
-    sky2 = {'sunny':'#d9f5ed', 'rainy':'#9bb5d0', 'rainbow':'#e8efff'}[scene]
+    sky = {'sunny':'#9cdef0', 'rainy':'#617caa', 'rainbow':'#a9dced'}[scene]
     weather = {
-        'sunny':'<path d="M294 156q3-31 35-31 14-29 44-13 24 3 28 28 25 5 22 28H307q-18-1-13-12Z" fill="#fff" opacity=".8"/>',
-        'rainy':'<path d="M255 153q3-44 49-44 19-43 66-19 33 4 38 40 33 8 29 42H273q-25-2-18-19Z" fill="#7182a5"/><path d="m292 191-9 24m40-24-9 24m40-24-9 24m40-24-9 24" stroke="#b9f1ff" stroke-width="7" stroke-linecap="round"/>',
-        'rainbow':'<path d="M267 202a89 89 0 0 1 178 0" fill="none" stroke="#ff6d78" stroke-width="13"/><path d="M280 202a76 76 0 0 1 152 0" fill="none" stroke="#ffb95c" stroke-width="13"/><path d="M293 202a63 63 0 0 1 126 0" fill="none" stroke="#ffe66d" stroke-width="13"/><path d="M306 202a50 50 0 0 1 100 0" fill="none" stroke="#6ed9a7" stroke-width="13"/><path d="M319 202a37 37 0 0 1 74 0" fill="none" stroke="#69baff" stroke-width="13"/><circle cx="352" cy="160" r="22" fill="#ffe478"/>'
+        'sunny': '<path d="M294 156c0-18 14-32 32-32 8-18 34-22 48-7 16 0 28 13 28 29 16 3 25 13 25 27H300c-13 0-20-5-20-13Z" fill="#f9fdff"/>',
+        'rainy': '<path d="M255 153c0-25 19-44 44-44 8-27 44-34 62-14 28-5 51 15 51 40 23 5 33 17 33 37H273c-14 0-22-8-18-19Z" fill="#8299b8"/><path d="m292 191-9 24m40-24-9 24m40-24-9 24m40-24-9 24" stroke="#c8f3ff" stroke-width="7" stroke-linecap="round"/>',
+        'rainbow': '<path d="M267 202a89 89 0 0 1 178 0" fill="none" stroke="#ff6d78" stroke-width="13"/><path d="M280 202a76 76 0 0 1 152 0" fill="none" stroke="#ffb95c" stroke-width="13"/><path d="M293 202a63 63 0 0 1 126 0" fill="none" stroke="#ffe66d" stroke-width="13"/><path d="M306 202a50 50 0 0 1 100 0" fill="none" stroke="#6ed9a7" stroke-width="13"/><path d="M319 202a37 37 0 0 1 74 0" fill="none" stroke="#69baff" stroke-width="13"/><circle cx="352" cy="160" r="22" fill="#ffe478"/>'
     }[scene]
-    label = {'sunny':'СОЛНЕЧНО','rainy':'ПОШЁЛ ДОЖДЬ','rainbow':'РАДУГА ПОЯВИЛАСЬ'}[scene]
-    return f'''<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360"><defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="{sky}"/><stop offset="1" stop-color="{sky2}"/></linearGradient><linearGradient id="hill" x2="0" y2="1"><stop stop-color="#55c998"/><stop offset="1" stop-color="#208e82"/></linearGradient></defs><rect width="480" height="360" fill="url(#sky)"/><circle cx="82" cy="89" r="54" fill="#fff" opacity=".16"/><circle cx="82" cy="89" r="38" fill="#fff" opacity=".1"/>{weather}<path d="M0 250q85-62 177 0t160-4q76-50 143 2v112H0Z" fill="url(#hill)"/><path d="M0 286q98-58 184 0t160-3q69-42 136 1v76H0Z" fill="#167c77" opacity=".7"/><path d="M0 315q92-33 178 0t159 0q75-30 143 0v45H0Z" fill="#126b6e" opacity=".65"/><rect x="17" y="17" width="446" height="72" rx="20" fill="#15324c" opacity=".78"/><text x="38" y="43" fill="#9af0dc" font-family="Arial,sans-serif" font-size="12" font-weight="700" letter-spacing="2">V-LABS  /  УРОК 1</text><text x="38" y="72" fill="#fff" font-family="Arial,sans-serif" font-size="22" font-weight="700">Солнце и дождь</text><rect x="20" y="318" width="440" height="24" rx="12" fill="#15324c" opacity=".68"/><text x="240" y="335" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="10" letter-spacing="1.3">{label}  •  НАЖМИ НА ОБЛАКО ИЛИ ПРОБЕЛ</text></svg>'''
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">'
+        f'<rect width="480" height="360" fill="{sky}"/><circle cx="82" cy="89" r="54" fill="#ffffff" opacity=".16"/>'
+        f'<circle cx="82" cy="89" r="38" fill="#ffffff" opacity=".1"/>{weather}'
+        f'<path d="M0 250q85-62 177 0t160-4q76-50 143 2v112H0Z" fill="#55c998"/>'
+        f'<path d="M0 286q98-58 184 0t160-3q69-42 136 1v76H0Z" fill="#167c77" opacity=".7"/>'
+        f'<path d="M0 315q92-33 178 0t159 0q75-30 143 0v45H0Z" fill="#126b6e" opacity=".65"/></svg>'
+    )
+
 
 def cloud_svg():
-    return b'<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90" viewBox="0 0 120 90"><defs><linearGradient id="c" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#b9d5eb"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#173953" flood-opacity=".28"/></filter></defs><g filter="url(#s)" fill="url(#c)" stroke="#fff" stroke-width="2"><circle cx="43" cy="50" r="25"/><circle cx="67" cy="38" r="30"/><circle cx="91" cy="53" r="21"/><rect x="24" y="49" width="83" height="26" rx="13" stroke="none"/></g><circle cx="56" cy="53" r="2.8" fill="#36536e"/><circle cx="77" cy="53" r="2.8" fill="#36536e"/><path d="M59 64q8 6 16 0" fill="none" stroke="#36536e" stroke-width="2.5" stroke-linecap="round"/></svg>'
+    return b'<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90" viewBox="0 0 120 90"><path d="M22 67c-8-3-11-9-9-17 2-9 10-14 20-13 4-17 17-25 31-21 10 3 16 10 18 20 14-5 29 4 30 18 1 8-4 14-12 17H22Z" fill="#eaf6ff" stroke="#ffffff" stroke-width="3"/><circle cx="48" cy="52" r="3" fill="#36536e"/><circle cx="72" cy="52" r="3" fill="#36536e"/><path d="M52 64q8 7 16 0" fill="none" stroke="#36536e" stroke-width="3" stroke-linecap="round"/></svg>'
+
 
 def sprite_svg(kind, alt=False):
     if kind == 0:
@@ -53,12 +85,12 @@ def sprite_svg(kind, alt=False):
     elif kind == 5:
         body = '<path d="M48 10 59 38 89 30 68 51 83 77 55 66 39 91 38 62 9 56 36 44Z" fill="#ffe37a" stroke="#fff4bc" stroke-width="2"/><circle cx="48" cy="49" r="9" fill="#fff"/><path d="M20 20 9 12m72 8 10-8M14 79 4 85" stroke="#77efdb" stroke-width="4" stroke-linecap="round"/>'
     elif kind == 6:
-        body = '<circle cx="48" cy="48" r="37" fill="#a98aff"/><circle cx="48" cy="48" r="26" fill="#f5eaff"/><text x="48" y="62" text-anchor="middle" fill="#523c82" font-family="Arial" font-weight="700" font-size="42">?</text><path d="M28 15q20-16 40 0" fill="none" stroke="#ffe78a" stroke-width="5" stroke-linecap="round"/>'
+        body = '<circle cx="48" cy="48" r="37" fill="#a98aff"/><circle cx="48" cy="48" r="26" fill="#f5eaff"/><path d="M34 36c1-10 7-16 16-16 10 0 16 7 16 15 0 7-5 11-11 15-5 3-7 6-7 12" fill="none" stroke="#523c82" stroke-width="6" stroke-linecap="round"/><circle cx="48" cy="72" r="3.5" fill="#523c82"/><path d="M28 15q20-16 40 0" fill="none" stroke="#ffe78a" stroke-width="5" stroke-linecap="round"/>'
     else:
         body = '<path d="M23 8h34l18 18v50q0 8-8 8H23q-8 0-8-8V16q0-8 8-8Z" fill="#f8fbff"/><path d="M57 8v20h18" fill="#bcefe4"/><path d="M28 43h37M28 54h37M28 65h26" stroke="#51b69e" stroke-width="4" stroke-linecap="round"/><path d="m20 79 4-13 33-33 9 9-33 33Z" fill="#ffbd62"/><path d="m57 33 9 9" stroke="#fff" stroke-width="3"/>'
     if alt and kind == 2:
         body = '<path d="M48 7 84 28v40L48 89 12 68V28Z" fill="#a1a7ff"/><path d="M48 7v39L12 28ZM48 46l36-18v40L48 89Z" fill="#ffc27f"/><path d="m48 7 36 21-36 18-36-18Z" fill="#f7f2ff"/><circle cx="37" cy="44" r="3" fill="#513060"/><circle cx="58" cy="44" r="3" fill="#513060"/><path d="M39 58q9-8 18 0" fill="none" stroke="#513060" stroke-width="3" stroke-linecap="round"/>'
-    return f'<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><defs><filter id="s"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#07152d" flood-opacity=".35"/></filter></defs><g filter="url(#s)">{body}</g></svg>'
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">{body}</svg>'
 
 class Project:
     def __init__(self): self.blocks={}; self.counter=0
@@ -114,7 +146,7 @@ def build(index, lesson):
             change=stagep.add('looks_switchbackdropto',{'BACKDROP':[1,menu]},parent=receive);stagep.blocks[menu]['parent']=change
             stagep.chain([receive,change])
         # Sunny sprite explains the controls, while the separate cloud handles click events.
-        s1=p.say('Солнечное утро! Нажми на облако — пойдёт дождь. Пробел вызовет радугу!'); p.chain([flag,s1])
+        s1=p.say('Солнце и дождь: нажми на облако — пойдёт дождь. Пробел вызовет радугу!'); p.chain([flag,s1])
         space=p.hat('event_whenkeypressed',{'KEY_OPTION':['space',None]},x=32,y=180)
         broadcast=menu_block(p,'event_broadcast_menu','BROADCAST_OPTION','Радуга',None)
         send=p.add('event_broadcast',{'BROADCAST_INPUT':[1,broadcast]},parent=space);p.blocks[broadcast]['parent']=send;p.chain([space,send])
@@ -223,7 +255,7 @@ def build(index, lesson):
     costumes=[asset('Герой',sprite_svg(index).encode(),'svg')]
     if index==2: costumes.append(asset('Новая роль',sprite_svg(index,True).encode(),'svg'))
     cloudcost=asset('Облачко',cloud_svg(),'svg',60,45) if index==0 else None
-    beacon_svg=b'<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><defs><radialGradient id="g"><stop stop-color="#fff8b7"/><stop offset=".28" stop-color="#ffe875" stop-opacity=".85"/><stop offset="1" stop-color="#ffe875" stop-opacity="0"/></radialGradient></defs><circle cx="48" cy="48" r="46" fill="url(#g)"/><path d="M48 18v57M34 37l14-18 14 18" fill="none" stroke="#baffed" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="48" cy="46" r="7" fill="#fff"/><path d="M29 76h38" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'
+    beacon_svg=b'<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="43" fill="#ffe875" opacity=".28"/><circle cx="48" cy="48" r="29" fill="#ffe875" opacity=".42"/><path d="M48 18v57M34 37l14-18 14 18" fill="none" stroke="#baffed" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="48" cy="46" r="7" fill="#fff"/><path d="M29 76h38" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'
     beacon_cost=asset('Маяк',beacon_svg,'svg') if index==1 else None
     sounds=[]
     if index==3:
