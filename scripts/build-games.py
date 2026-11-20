@@ -10,6 +10,7 @@ Usage:
     python3 scripts/build-games.py --check  # verify the committed files are up to date
 """
 import hashlib, io, json, math, random, struct, sys, wave, zipfile
+from fractions import Fraction
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -122,6 +123,16 @@ SPRITES = {
 DROP = svg(48, 56, '<path d="M24 5q15 21 15 31a15 15 0 0 1-30 0q0-10 15-31Z" fill="#7fd4ff" stroke="#e8f8ff" stroke-width="3" stroke-linejoin="round"/><path d="M17 36q0 7 6 9" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>')
 DRUM = svg(96, 96, '<path d="M14 36v34q0 14 34 14t34-14V36Z" fill="#ff8b60"/><path d="M14 52l17 26M31 44l17 38M48 44l17 38M65 44l17 26" fill="none" stroke="#ffd9a8" stroke-width="3"/><path d="M14 36a34 13 0 1 0 68 0a34 13 0 1 0-68 0Z" fill="#fff4dc" stroke="#ffc94f" stroke-width="4"/><path d="M22 8 44 32M74 8 52 32" stroke="#74eed9" stroke-width="5" stroke-linecap="round"/><circle cx="22" cy="8" r="5" fill="#c2fff2"/><circle cx="74" cy="8" r="5" fill="#c2fff2"/>')
 STAR = svg(64, 64, '<path d="M32 4 40 24 61 25 45 39 50 60 32 48 14 60 19 39 3 25 24 24Z" fill="#ffe36d" stroke="#fff7c9" stroke-width="3" stroke-linejoin="round"/><circle cx="32" cy="33" r="6" fill="#fffbe6"/>')
+NOTE_ICON = '<path d="M46 26v35" stroke="#fff" stroke-width="5" stroke-linecap="round"/><circle cx="39" cy="62" r="8" fill="#fff"/><path d="M46 26q15 4 16 18" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>'
+NOTES_ICON = '<path d="M39 62V33l26-5v29" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="62" r="8" fill="#fff"/><circle cx="58" cy="58" r="8" fill="#fff"/>'
+STAR_ICON = '<path d="M48 21 55 39 74 40 59 52 64 71 48 60 32 71 37 52 22 40 41 39Z" fill="#ffe36d" stroke="#fff7c9" stroke-width="2" stroke-linejoin="round"/>'
+
+
+def button_svg(ring, fill, icon):
+    """A round stage button; the icon is drawn with shapes because Scratch renders SVG text unreliably."""
+    return svg(96, 96, f'<circle cx="48" cy="48" r="43" fill="{ring}"/><circle cx="48" cy="48" r="36" fill="{fill}"/>{icon}')
+
+
 CLOUD = svg(120, 90, '<path d="M22 67c-8-3-11-9-9-17 2-9 10-14 20-13 4-17 17-25 31-21 10 3 16 10 18 20 14-5 29 4 30 18 1 8-4 14-12 17H22Z" fill="#eaf6ff" stroke="#ffffff" stroke-width="3"/><circle cx="48" cy="52" r="3" fill="#36536e"/><circle cx="72" cy="52" r="3" fill="#36536e"/><path d="M52 64q8 7 16 0" fill="none" stroke="#36536e" stroke-width="3" stroke-linecap="round"/>')
 
 
@@ -160,6 +171,65 @@ def note_sound(name, freq, seconds=0.4):
         wave_sum = math.sin(2*math.pi*freq*t) + .35*math.sin(4*math.pi*freq*t) + .15*math.sin(6*math.pi*freq*t)
         samples.append(8200 * env * wave_sum)
     return wav_sound(name, samples)
+
+
+# Notes of the tunes: short code → (name shown in Scratch, MIDI number). The first octave reuses the names of NOTES.
+PITCHES = {
+    'D4': ('Ре', 62), 'Eb4': ('Ми-бемоль', 63), 'F4': ('Фа', 65), 'F#4': ('Фа-диез', 66), 'G4': ('Соль', 67),
+    'G#4': ('Соль-диез', 68), 'A4': ('Ля', 69), 'Bb4': ('Си-бемоль', 70), 'B4': ('Си', 71),
+    'C5': ('До высокая', 72), 'C#5': ('До-диез высокая', 73), 'D5': ('Ре высокая', 74),
+    'Eb5': ('Ми-бемоль высокая', 75), 'E5': ('Ми высокая', 76), 'F5': ('Фа высокая', 77),
+    'F#5': ('Фа-диез высокая', 78), 'G5': ('Соль высокая', 79), 'Bb5': ('Си-бемоль высокая', 82),
+}
+
+
+class Tune:
+    """A melody written as text: 'G4:1 Eb4:.75 Bb4:.25 -:.5' is note:beats, «-» is a rest.
+
+    Every note becomes two blocks, «start sound» and «wait», so pupils can read and edit the rhythm.
+    Scratch checks a «wait» 30 times a second, so pick a beat whose note lengths do not fall exactly on
+    a multiple of 1/30 s — otherwise equal notes come out unequal.
+    """
+
+    def __init__(self, beat):
+        self.beat = Fraction(str(beat))      # seconds per beat
+        self.used = set()
+
+    def part(self, text, beats):
+        """Blocks for one piece of the tune; `beats` is its exact length and guards against rhythm typos."""
+        items = []
+        for token in text.split():
+            code, _, length = token.partition(':')
+            assert code == '-' or code in PITCHES, f'unknown note {code}'
+            items.append((code, Fraction(length)))
+        total = sum(length for _, length in items)
+        assert total == beats, f'«{text}» lasts {total} beats instead of {beats}'
+        nodes, index = [], 0
+        while index < len(items):
+            run = 1
+            while index + run < len(items) and items[index + run] == items[index]:
+                run += 1
+            if run >= 3 and items[index][0] != '-':
+                nodes.append(repeat(run, self._note(*items[index])))   # equal notes in a row read better as a loop
+            else:
+                for _ in range(run):
+                    nodes.extend(self._note(*items[index]))
+            index += run
+        return nodes
+
+    def bars(self, *bars, beats=4):
+        return [node for bar in bars for node in self.part(bar, beats)]
+
+    def _note(self, code, length):
+        pause = wait(round(float(length * self.beat), 3))
+        if code == '-':
+            return [pause]
+        self.used.add(code)
+        return [play(PITCHES[code][0]), pause]
+
+    def sounds(self):
+        codes = sorted(self.used, key=lambda code: PITCHES[code][1])
+        return [note_sound(PITCHES[code][0], round(440 * 2 ** ((PITCHES[code][1] - 69) / 12), 2)) for code in codes]
 
 
 def drum_sound(name='Барабан', seconds=0.22):
@@ -846,6 +916,8 @@ def game_sound():
     g = Game('04-sound', 4, 'Звук', 'Музыкальный инструмент')
     g.variable('Громкость', 80, show=(5, 5))
     g.variable('Высота', 0, show=(5, 32))
+    g.variable('Мелодия', 'тишина', show=(5, 59))
+    MUSIC, MARCH, CANTINA, THEME = 'Музыка', 'Имперский марш', 'Cantina Band', 'Главная тема'
     drum = drum_sound()
     stage = g.stage([backdrop('Студия', scene_svg(['#102d47', '#167d87'], SCENES['sound']))], sounds=[drum],
                     note='Клик по сцене — удар барабана.')
@@ -854,25 +926,31 @@ def game_sound():
     notes = [note_sound(name, freq) for name, freq in NOTES]
     synth = g.sprite('Синтезатор', [costume('Синтезатор', sprite_svg('synth'))], sounds=notes,
                      x=-60, y=-95, size=100,
-                     note='1–8 — ноты, 9 — барабан, 0 — мелодия. ↑ ↓ — громкость, ← → — высота звука,\n'
-                          'пробел — тишина, клик по синтезатору — стерео.')
+                     note='1–8 — ноты, 9 — барабан, 0 — следующая мелодия из «Звёздных войн».\n'
+                          '↑ ↓ — громкость, ← → — высота звука (меняют и мелодии), пробел — тишина,\n'
+                          'клик по синтезатору — стерео.')
     synth.when(flag(), vol_to(80), sfx_clear(), fx_clear(), size_to(100), set_var('Громкость', volume()),
-               set_var('Высота', 0),
-               say_for('Клавиши 1–8 — ноты, 9 — барабан, 0 — мелодия.', 3),
-               say_for('Стрелки меняют громкость и высоту, пробел — тишина.', 3))
+               set_var('Высота', 0), set_var('Мелодия', 'тишина'),
+               say_for('Клавиши 1–8 — ноты, 9 — барабан, пробел — тишина.', 3),
+               say_for('Кнопки справа и клавиша 0 играют музыку из «Звёздных войн».', 3),
+               say_for('Стрелки меняют громкость и высоту звука.', 3))
     synth.when(flag(), play_wait('До'), play_wait('Ми'), play_wait('Соль'), play('До высокая'))
     for number, (name, _) in enumerate(NOTES, 1):
         synth.when(key(str(number)), play(name), fx_to('COLOR', number * 22), say(name))
-    synth.when(key('0'), say('Играю мелодию…'),
-               repeat(2, [play_wait('До')]), repeat(2, [play_wait('Соль')]), repeat(2, [play_wait('Ля')]),
-               play_wait('Соль'), wait(0.2),
-               repeat(2, [play_wait('Фа')]), repeat(2, [play_wait('Ми')]), repeat(2, [play_wait('Ре')]),
-               play_wait('До'), say(''))
+    # «0» switches to the next tune: the buttons listen to «Музыка» and check the variable «Мелодия».
+    synth.when(key('0'),
+               if_else(eq(var('Мелодия'), MARCH), [set_var('Мелодия', CANTINA)],
+                       [if_else(eq(var('Мелодия'), CANTINA), [set_var('Мелодия', THEME)],
+                                [set_var('Мелодия', MARCH)])]),
+               broadcast(MUSIC))
     synth.when(key('up arrow'), vol_by(10), set_var('Громкость', volume()))
     synth.when(key('down arrow'), vol_by(-10), set_var('Громкость', volume()))
-    synth.when(key('right arrow'), sfx_by('PITCH', 10), change_var('Высота', 10))
-    synth.when(key('left arrow'), sfx_by('PITCH', -10), change_var('Высота', -10))
-    synth.when(key('space'), stop_sounds(), sfx_clear(), set_var('Высота', 0), say_for('Тишина…', 1))
+    synth.when(key('right arrow'), if_(lt(var('Высота'), 360), [change_var('Высота', 10)]),
+               sfx_to('PITCH', var('Высота')))
+    synth.when(key('left arrow'), if_(gt(var('Высота'), -360), [change_var('Высота', -10)]),
+               sfx_to('PITCH', var('Высота')))
+    synth.when(key('space'), set_var('Мелодия', 'тишина'), broadcast(MUSIC), stop_sounds(), sfx_clear(),
+               set_var('Высота', 0), say_for('Тишина…', 1))
     synth.when(clicked(), sfx_to('PAN', -100), say('Звук слева…'), play_wait('До'),
                sfx_to('PAN', 100), say('…и справа!'), play_wait('Соль'), sfx_to('PAN', 0), say(''))
 
@@ -887,6 +965,51 @@ def game_sound():
     drums.when(key('up arrow'), vol_by(10))
     drums.when(key('down arrow'), vol_by(-10))
     drums.when(key('space'), stop_sounds(), sfx_clear())
+
+    # ── Three tunes from «Star Wars» (music by John Williams), short excerpts of the melody line ──
+    def tune_button(name, y, art, tune, blocks, hint, rhythm):
+        button = g.sprite(name, [costume(name, art)], sounds=tune.sounds(), x=196, y=y, size=60,
+                          rotation_style="don't rotate",
+                          note=f'Клик — «{name}» из «Звёздных войн» (музыка Джона Уильямса), отрывок.\n'
+                               f'Каждая нота — «включить звук» и «ждать»: {rhythm}.\n'
+                               'Поменяй числа — изменится ритм, поменяй звуки — получится своя мелодия.')
+        button.when(flag(), goto_xy(196, y), size_to(60), show(),
+                    forever([vol_to(var('Громкость')), sfx_to('PITCH', var('Высота'))]))
+        pause = [wait((78 - y) / 30)] if y != 78 else []
+        button.when(flag(), *pause, say_for(name, 2))                   # the buttons introduce themselves in turn
+        button.when(clicked(), set_var('Мелодия', name), broadcast(MUSIC), say_for(hint, 2))
+        # The message restarts this script in every button, so only the chosen tune keeps playing.
+        button.when(receive(MUSIC), size_to(60),
+                    if_(eq(var('Мелодия'), name), [size_to(75), *blocks, size_to(60)]))
+        return button
+
+    march = Tune(0.56)
+    tune_button(MARCH, 78, button_svg('#ff7b7b', '#8f1d2c', NOTE_ICON), march, march.bars(
+        'G4:1 G4:1 G4:1 Eb4:.75 Bb4:.25',
+        'G4:1 Eb4:.75 Bb4:.25 G4:2',
+        'D5:1 D5:1 D5:1 Eb5:.75 Bb4:.25',
+        'F#4:1 Eb4:.75 Bb4:.25 G4:2',
+        'G5:1 G4:.75 G4:.25 G5:1 F#5:.75 F5:.25',
+        'E5:.25 Eb5:.25 E5:.5 -:.5 G#4:.5 C#5:1 C5:.75 B4:.25',
+        'Bb4:.25 A4:.25 Bb4:.5 -:.5 Eb4:.5 F#4:1 Eb4:.75 Bb4:.25',
+        'G4:1 Eb4:.75 Bb4:.25 G4:2',
+    ), 'Имперский марш — тема Дарта Вейдера', '0.56 с — четверть, 0.42 и 0.14 — пунктирный ритм марша')
+
+    cantina = Tune(0.25)
+    riff = ('A4:1 D5:1 A4:1 D5:1', 'A4:.5 D5:1 A4:.5 -:.5 G#4:.5 A4:1')
+    tune_button(CANTINA, 18, button_svg('#ffd36b', '#c9661f', NOTES_ICON), cantina, cantina.bars(
+        *riff, 'A4:.5 G#4:.5 A4:.5 G4:.5 -:.5 F#4:.5 G4:.5 F4:.5', 'F4:1 D4:3',
+        *riff, 'G4:1.5 G4:1.5 F#4:.5 G4:.5', 'C5:.5 Bb4:1.5 A4:1 G4:1',
+        *riff, 'C5:1 C5:1.5 A4:.5 G4:1', 'F4:1.5 D4:2.5',
+    ), 'Cantina Band — весёлый оркестр из кантины', '0.25 с — четверть, 0.125 — восьмая, быстрый темп')
+
+    theme = Tune(0.54)
+    tune_button(THEME, -42, button_svg('#9cc9ff', '#1f3f8f', STAR_ICON), theme, [repeat(2, [
+        *theme.part('F4:1/3 F4:1/3 F4:1/3', 1),
+        *theme.part('Bb4:2 F5:2', 4),
+        repeat(2, theme.part('Eb5:1/3 D5:1/3 C5:1/3 Bb5:2 F5:1', 4)),
+        *theme.part('Eb5:1/3 D5:1/3 Eb5:1/3 C5:2', 3),
+    ])], 'Главная тема «Звёздных войн»', '1.08 с — половинная нота, 0.18 — быстрая триоль')
     g.add_badge()
     return g
 
