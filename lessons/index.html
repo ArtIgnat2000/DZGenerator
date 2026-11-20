@@ -6,7 +6,7 @@ body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.6 system-ui,-ap
 a:focus-visible{outline:3px solid #e9b562;outline-offset:3px}
 header{background:var(--navy);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 20px}
 .brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none}
-.sitenav{display:flex;flex-wrap:wrap;gap:4px}
+.sitenav{display:flex;flex-wrap:wrap;gap:4px;margin-right:auto}
 .sitenav a{color:#d7e6ea;text-decoration:none;font-size:14px;font-weight:600;padding:7px 12px;border-radius:7px}
 .sitenav a:hover{background:#ffffff1f;color:#fff}
 .sitenav a[aria-current]{background:#45c2aa;color:var(--navy)}
@@ -14,16 +14,13 @@ header{background:var(--navy);color:#fff;padding:12px 24px;display:flex;align-it
 header b{font-size:19px}
 header small{display:block;color:#b8d1dd;font-size:10px;letter-spacing:1.4px}
 main{max-width:760px;margin:0 auto;padding:24px 18px 48px}
-.crumbs{font-size:13px;color:var(--muted)}
-.crumbs a{color:var(--teal);text-decoration:none}
-.crumbs a:hover{text-decoration:underline}
-.steps{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:12px 0 4px}
+.steps{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:0 0 4px}
 .steps a{display:flex;flex-direction:column;align-items:center;gap:3px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 2px 5px;font-size:12px;line-height:1.3;color:var(--navy);text-decoration:none;overflow:hidden}
 .steps b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e4eef0;font-size:12px}
 .steps a:hover{border-color:var(--teal)}
 .steps a[aria-current]{background:var(--teal);border-color:var(--teal);color:#fff}
 .steps a[aria-current] b{background:#fff;color:var(--teal)}
-h1{font-size:26px;margin:14px 0 6px}
+h1{font-size:26px;line-height:1.25;margin:14px 0 6px}
 .goal{color:var(--muted);margin:0 0 20px}
 .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:0 0 14px}
 h2{font-size:15px;margin:0 0 10px;color:var(--teal);letter-spacing:.6px;text-transform:uppercase}
@@ -43,33 +40,29 @@ li{margin:4px 0}
 .pager small{display:block;color:var(--muted);font-size:12px;font-weight:400}
 .pager .next{text-align:right}
 .keys{display:none;margin:10px 0 0;text-align:center;font-size:12px;color:var(--muted)}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:0 0 26px}
-.tiles a{display:block;background:#fff;border:1px solid var(--line);border-top:4px solid var(--teal);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--navy)}
-.tiles a:hover{border-color:var(--teal)}
-.tiles b{display:block;font-size:17px}
-.tiles span{display:block;font-size:13px;color:var(--muted)}
-.section{font-size:19px;margin:0 0 6px;scroll-margin-top:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.grid>a{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--navy)}
-.grid>a:hover{border-color:var(--teal)}
-.grid b{display:block;margin-bottom:4px}
-.grid span{display:block;font-size:13px;color:var(--muted)}
-.grid .tag{margin-top:8px;color:var(--teal);font-weight:600}
-#games{scroll-margin-top:16px}
+.teacher{margin:18px 0 0;font-size:13px;color:var(--muted)}
+.teacher a,.download-note a{color:var(--teal);font-weight:600;text-decoration:none}
+.teacher a:hover,.download-note a:hover{text-decoration:underline}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;gap:8px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;margin:0 0 8px;padding:0 16px 0 0}
+.list li:hover{border-color:var(--teal)}
+.row{flex:1;min-width:0;display:flex;align-items:center;gap:14px;padding:13px 0 13px 16px;color:var(--navy);text-decoration:none}
+.num{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#e4eef0;font-weight:700}
+.row b{display:block;line-height:1.35}
+.row small{display:block;font-size:13px;line-height:1.4;color:var(--muted)}
+.dl{flex:none;max-width:42%;text-align:right;font-size:13px;line-height:1.35;color:var(--teal);text-decoration:none;padding:6px 0}
+.dl:hover b{text-decoration:underline}
+.dl b{display:block}
 footer{font-size:12px;color:var(--muted);margin-top:28px}
 @media(hover:hover) and (min-width:621px){.keys{display:block}}
-@media(max-width:620px){header{padding:12px 14px}.sitenav a{padding:7px 10px}.steps{gap:4px}.steps a{padding:6px 0}.steps span{display:none}.pager{grid-template-columns:1fr}.pager .next{text-align:left}}
-@media print{header,.crumbs,.steps,.pager,.keys,.tiles,.btn,footer{display:none}body{background:#fff}main{max-width:none;padding:0}.card,.game,.idea{break-inside:avoid;page-break-inside:avoid}.lesson-title{display:block!important;font-size:20px;font-weight:700;margin:0 0 12px}}
+@media(max-width:620px){header{padding:12px 14px}.sitenav a{padding:7px 10px}.steps{gap:4px}.steps a{padding:6px 0}.steps span{display:none}.pager{grid-template-columns:1fr}.pager .next{text-align:left}.list li{flex-direction:column;align-items:stretch;gap:0;padding:0 14px 10px}.row{padding:12px 0 6px}.dl{max-width:none;text-align:left;padding:0 0 0 48px}.dl b{display:inline}}
+@media print{header,.steps,.pager,.keys,.teacher,.btn,.dl,footer{display:none}body{background:#fff}main{max-width:none;padding:0}.card,.game,.idea{break-inside:avoid;page-break-inside:avoid}.lesson-title{display:block!important;font-size:20px;font-weight:700;margin:0 0 12px}}
 .lesson-title{display:none}</style></head><body>
-<header><a class="brand" href="../V-labs-generator.html" title="На стартовую страницу"><div class="mark">V</div><div><b>V-labs</b><small>SCRATCH 3.0 · УЧИМСЯ СОЗДАВАТЬ</small></div></a><nav class="sitenav" aria-label="Разделы сайта"><a href="../V-labs-generator.html">Генератор заданий</a><a href="index.html" aria-current="page">Уроки</a><a href="index.html#games">Игры Scratch</a></nav></header>
+<header><a class="brand" href="../V-labs-generator.html" title="Генератор заданий — стартовая страница"><div class="mark">V</div><div><b>V-labs</b><small>SCRATCH 3.0 · УЧИМСЯ СОЗДАВАТЬ</small></div></a><nav class="sitenav" aria-label="Разделы сайта"><a href="../V-labs-generator.html">Генератор заданий</a><a href="index.html" aria-current="page">Уроки и игры</a></nav></header>
 <main>
-<nav class="crumbs" aria-label="Вы здесь"><a href="../V-labs-generator.html">V-labs</a> › Уроки</nav>
 <h1>Уроки и игры Scratch</h1>
-<p class="goal">Всё, что есть в проекте, на одной странице: программа курса, игры для скачивания и генератор писем с заданиями.</p>
-<div class="tiles"><a href="#lessons"><b>8 уроков</b><span>Блоки, практика и ключевая идея по каждой теме</span></a><a href="#games"><b>8 игр Scratch</b><span>Готовые проекты .sb3 — по одному на урок</span></a><a href="../V-labs-generator.html"><b>Генератор заданий</b><span>Письмо ученику и родителям за пару минут</span></a></div>
-<h2 class="section" id="lessons">Программа курса</h2>
-<p class="goal">Каждый тип блоков разбираем через практику. Выберите урок — там блоки, практика, идея и игры, которые собираем на занятии.</p>
-<div class="grid" style="margin:0 0 26px"><a href="1.html"><b>Урок 1. События (Events)</b><span>Научиться запускать программы по разным триггерам.</span><span class="tag">Игра: Солнце и дождь</span></a><a href="2.html"><b>Урок 2. Движение (Motion)</b><span>Освоить управление положением и направлением спрайта.</span><span class="tag">Игра: Космический маршрут</span></a><a href="3.html"><b>Урок 3. Внешность (Looks)</b><span>Научиться управлять внешним видом спрайта и сцены.</span><span class="tag">Игра: Театр настроений</span></a><a href="4.html"><b>Урок 4. Звук (Sound)</b><span>Добавить звуковое сопровождение к проекту.</span><span class="tag">Игра: Музыкальный инструмент</span></a><a href="5.html"><b>Урок 5. Управление (Control)</b><span>Научиться управлять логикой выполнения программы.</span><span class="tag">Игра: Метеоритный дождь</span></a><a href="6.html"><b>Урок 6. Сенсоры (Sensing)</b><span>Научиться «чувствовать» окружение.</span><span class="tag">Игра: Следопыт за мышью</span></a><a href="7.html"><b>Урок 7. Операторы (Operators)</b><span>Научиться работать с числами, текстом и логикой.</span><span class="tag">Игра: Математический оракул</span></a><a href="8.html"><b>Урок 8. Данные (Data)</b><span>Научиться хранить и использовать информацию.</span><span class="tag">Игра: Дневник желаний</span></a></div>
-<div class="card" id="games"><h2>Все проекты Scratch для скачивания</h2><p class="goal">Загрузите проект нужного урока и откройте его в Scratch 3.0: Файл → Загрузить с компьютера. На странице урока кнопка скачивания также находится рядом с описанием игры.</p><div class="grid"><div class="game"><b>Солнце и дождь</b><p>Урок 1. События (Events). Интерактивная сценка: клики, клавиши, таймер и сообщения меняют погоду — дождь, гром, ветер и радугу.</p><a class="btn" href="games/01-events.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="1.html">Страница урока</a></div><div class="game"><b>Космический маршрут</b><p>Урок 2. Движение (Motion). Веди ракету стрелками к маяку, уворачивайся от астероида и пробуй манёвры клавишами 0–9.</p><a class="btn" href="games/02-motion.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="2.html">Страница урока</a></div><div class="game"><b>Театр настроений</b><p>Урок 3. Внешность (Looks). Артист меняет костюмы, размер, цвет и эффекты; декорации и слои переключаются клавишами.</p><a class="btn" href="games/03-looks.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="3.html">Страница урока</a></div><div class="game"><b>Музыкальный инструмент</b><p>Урок 4. Звук (Sound). Клавиши 1–8 играют ноты, 9 — барабан; три кнопки играют мелодии из «Звёздных войн»: Имперский марш, Cantina Band и главную тему.</p><a class="btn" href="games/04-sound.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="4.html">Страница урока</a></div><div class="game"><b>Метеоритный дождь</b><p>Урок 5. Управление (Control). Уклоняйся от клонов-метеоритов и лови звёзды: циклы, условия, уровни и жизни.</p><a class="btn" href="games/05-control.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="5.html">Страница урока</a></div><div class="game"><b>Следопыт за мышью</b><p>Урок 6. Сенсоры (Sensing). Герой идёт за указателем и ищет невидимый клад по подсказкам «горячо — холодно».</p><a class="btn" href="games/06-sensing.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="6.html">Страница урока</a></div><div class="game"><b>Математический оракул</b><p>Урок 7. Операторы (Operators). Пять случайных примеров на +, −, × и : и рассказ оракула о любом числе.</p><a class="btn" href="games/07-operators.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="7.html">Страница урока</a></div><div class="game"><b>Дневник желаний</b><p>Урок 8. Данные (Data). Желания записываются в список: добавляй, вставляй, заменяй, ищи и удаляй клавишами.</p><a class="btn" href="games/08-data.sb3" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="8.html">Страница урока</a></div></div><p class="download-note" style="margin-top:14px"><a class="btn ghost" href="https://scratch.mit.edu/projects/editor/" target="_blank" rel="noopener">Открыть редактор Scratch</a></p></div>
-<footer>V-labs · Scratch 3.0 · 8 уроков и 8 игр · <a href="../V-labs-generator.html" style="color:inherit">Генератор заданий</a></footer>
+<p class="goal">8 уроков курса. У каждого — страница с блоками и практикой и готовая игра для Scratch 3.0.</p>
+<ol class="list" id="games"><li><a class="row" href="1.html"><span class="num">1</span><span><b>События (Events)</b><small>Научиться запускать программы по разным триггерам.</small></span></a><a class="dl" href="games/01-events.sb3" download title="Интерактивная сценка: клики, клавиши, таймер и сообщения меняют погоду — дождь, гром, ветер и радугу.">Скачать игру <b>«Солнце и дождь»</b></a></li><li><a class="row" href="2.html"><span class="num">2</span><span><b>Движение (Motion)</b><small>Освоить управление положением и направлением спрайта.</small></span></a><a class="dl" href="games/02-motion.sb3" download title="Веди ракету стрелками к маяку, уворачивайся от астероида и пробуй манёвры клавишами 0–9.">Скачать игру <b>«Космический маршрут»</b></a></li><li><a class="row" href="3.html"><span class="num">3</span><span><b>Внешность (Looks)</b><small>Научиться управлять внешним видом спрайта и сцены.</small></span></a><a class="dl" href="games/03-looks.sb3" download title="Артист меняет костюмы, размер, цвет и эффекты; декорации и слои переключаются клавишами.">Скачать игру <b>«Театр настроений»</b></a></li><li><a class="row" href="4.html"><span class="num">4</span><span><b>Звук (Sound)</b><small>Добавить звуковое сопровождение к проекту.</small></span></a><a class="dl" href="games/04-sound.sb3" download title="Клавиши 1–8 играют ноты, 9 — барабан; три кнопки играют мелодии из «Звёздных войн»: Имперский марш, Cantina Band и главную тему.">Скачать игру <b>«Музыкальный инструмент»</b></a></li><li><a class="row" href="5.html"><span class="num">5</span><span><b>Управление (Control)</b><small>Научиться управлять логикой выполнения программы.</small></span></a><a class="dl" href="games/05-control.sb3" download title="Уклоняйся от клонов-метеоритов и лови звёзды: циклы, условия, уровни и жизни.">Скачать игру <b>«Метеоритный дождь»</b></a></li><li><a class="row" href="6.html"><span class="num">6</span><span><b>Сенсоры (Sensing)</b><small>Научиться «чувствовать» окружение.</small></span></a><a class="dl" href="games/06-sensing.sb3" download title="Герой идёт за указателем и ищет невидимый клад по подсказкам «горячо — холодно».">Скачать игру <b>«Следопыт за мышью»</b></a></li><li><a class="row" href="7.html"><span class="num">7</span><span><b>Операторы (Operators)</b><small>Научиться работать с числами, текстом и логикой.</small></span></a><a class="dl" href="games/07-operators.sb3" download title="Пять случайных примеров на +, −, × и : и рассказ оракула о любом числе.">Скачать игру <b>«Математический оракул»</b></a></li><li><a class="row" href="8.html"><span class="num">8</span><span><b>Данные (Data)</b><small>Научиться хранить и использовать информацию.</small></span></a><a class="dl" href="games/08-data.sb3" download title="Желания записываются в список: добавляй, вставляй, заменяй, ищи и удаляй клавишами.">Скачать игру <b>«Дневник желаний»</b></a></li></ol>
+<p class="download-note">Игра — это файл .sb3. Откройте его в Scratch 3.0: Файл → Загрузить с компьютера. <a href="https://scratch.mit.edu/projects/editor/" target="_blank" rel="noopener">Открыть редактор Scratch</a></p>
+<footer>V-labs · Scratch 3.0 · 8 уроков и 8 игр</footer>
 </main></body></html>
