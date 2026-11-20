@@ -55,7 +55,7 @@ let state={version:1,settings:{...defaults},profiles:[{id:'ivan',name:'Иван'
 let storageOK=true;
 try{const raw=localStorage.getItem(KEY);if(raw){const p=JSON.parse(raw);if(p.version===1&&p.current&&Array.isArray(p.profiles)){state={...state,...p,settings:{...defaults,...p.settings},current:{...initial,...p.current}}}}}catch{storageOK=false}
 // До версии 1.6.1 в каждое новое письмо сам подставлялся срок «К следующему занятию» — один раз убираем его из черновиков.
-function dropOldDue(){if(state.dueFix)return;[state.current,...state.profiles.map(p=>p.draft)].forEach(d=>{if(d&&d.dueText==='К следующему занятию'&&!d.dueDate)d.dueText=''});state.dueFix=1}
+function dropOldDue(){if(state.dueFix)return;[state.current,...state.profiles.map(p=>p.draft)].forEach(d=>{if(d&&d.dueText==='К следующему занятию')d.dueText=''});state.dueFix=1}
 dropOldDue();
 let timer,toastTimer;
 function toast(msg){$('toast').textContent=msg;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,5000)}
