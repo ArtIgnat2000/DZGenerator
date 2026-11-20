@@ -86,14 +86,18 @@ jobs:
           python3 -m py_compile scripts/build-games.py
           python3 - <<'PY'
           import glob, json, zipfile
+          THEMES = {'01-events': 'event', '02-motion': 'motion', '03-looks': 'looks', '04-sound': 'sound',
+                    '05-control': 'control', '06-sensing': 'sensing', '07-operators': 'operator', '08-data': 'data'}
           files = sorted(glob.glob('lessons/games/*.sb3'))
           assert len(files) == 8, f'Expected 8 Scratch projects, got {len(files)}'
           for path in files:
+              stem = path.split('/')[-1][:-4]
               with zipfile.ZipFile(path) as archive:
                   project = json.loads(archive.read('project.json'))
                   names = set(archive.namelist())
-                  assert len(project['targets']) >= 2, f'{path}: missing sprites'
+                  assert len(project['targets']) >= 3, f'{path}: missing sprites'
                   assert project['extensions'] == [], f'{path}: unexpected Scratch extensions'
+                  opcodes = []
                   for target in project['targets']:
                       for asset in target['costumes'] + target['sounds']:
                           assert asset['md5ext'] in names, f'{path}: missing {asset["md5ext"]}'
@@ -103,7 +107,18 @@ jobs:
                                   assert unsupported not in svg, f'{path}: unsupported SVG feature {unsupported}'
                       for block in target['blocks'].values():
                           assert not block['opcode'].startswith('procedures_'), f'{path}: custom Scratch block'
-                  print(f'{path}: valid core-block project, {len(project["targets"])} targets')
+                          if not block['shadow']:
+                              opcodes.append(block['opcode'])
+                      notes = [c['text'] for c in target['comments'].values()]
+                      assert any('V Labs' in text for text in notes), f'{path}: {target["name"]} has no V Labs note'
+                  badge = [t for t in project['targets'] if t['name'] == 'V Labs']
+                  assert len(badge) == 1 and badge[0]['visible'] and badge[0]['costumes'], f'{path}: no V Labs badge sprite'
+                  badge_ops = {b['opcode'] for b in badge[0]['blocks'].values()}
+                  assert {'event_whenflagclicked', 'looks_show', 'looks_gotofrontback'} <= badge_ops, f'{path}: V Labs badge is not kept on stage'
+                  themed = sum(op.startswith(THEMES[stem] + '_') for op in opcodes)
+                  assert len(opcodes) >= 100, f'{path}: only {len(opcodes)} blocks'
+                  assert themed >= 30, f'{path}: only {themed} blocks of the lesson topic'
+                  print(f'{path}: {len(project["targets"])} targets, {len(opcodes)} blocks, {themed} on the lesson topic, V Labs badge OK')
           PY
 
       - name: Check generator file size
