@@ -55,12 +55,26 @@ const GAME_FILES = {1:'01-events.sb3',2:'02-motion.sb3',3:'03-looks.sb3',4:'04-s
 const CSS = `:root{--navy:#142f43;--teal:#168574;--line:#dce4e8;--muted:#647889;--bg:#f0f4f5}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.6 system-ui,-apple-system,Segoe UI,Arial,sans-serif}
-header{background:var(--navy);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px}
+a:focus-visible{outline:3px solid #e9b562;outline-offset:3px}
+header{background:var(--navy);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 20px}
+.brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none}
+.sitenav{display:flex;flex-wrap:wrap;gap:4px}
+.sitenav a{color:#d7e6ea;text-decoration:none;font-size:14px;font-weight:600;padding:7px 12px;border-radius:7px}
+.sitenav a:hover{background:#ffffff1f;color:#fff}
+.sitenav a[aria-current]{background:#45c2aa;color:var(--navy)}
 .mark{background:#45c2aa;color:var(--navy);width:36px;height:36px;display:grid;place-items:center;font-size:24px;font-weight:800;border-radius:4px}
 header b{font-size:19px}
 header small{display:block;color:#b8d1dd;font-size:10px;letter-spacing:1.4px}
 main{max-width:760px;margin:0 auto;padding:24px 18px 48px}
-.back{font-size:13px;color:var(--teal);text-decoration:none}
+.crumbs{font-size:13px;color:var(--muted)}
+.crumbs a{color:var(--teal);text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+.steps{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:12px 0 4px}
+.steps a{display:flex;flex-direction:column;align-items:center;gap:3px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 2px 5px;font-size:12px;line-height:1.3;color:var(--navy);text-decoration:none;overflow:hidden}
+.steps b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e4eef0;font-size:12px}
+.steps a:hover{border-color:var(--teal)}
+.steps a[aria-current]{background:var(--teal);border-color:var(--teal);color:#fff}
+.steps a[aria-current] b{background:#fff;color:var(--teal)}
 h1{font-size:26px;margin:14px 0 6px}
 .goal{color:var(--muted);margin:0 0 20px}
 .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:0 0 14px}
@@ -73,22 +87,43 @@ li{margin:4px 0}
 .game p{margin:0 0 10px;color:var(--muted);font-size:14px}
 .btn{display:inline-block;background:var(--teal);color:#fff;text-decoration:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600}
 .btn.ghost{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+.game .btn{margin:0 4px 6px 0}
 .download-note{margin:8px 0 0;color:var(--muted);font-size:12px}
-.nav{display:flex;justify-content:space-between;gap:10px;margin:22px 0 0;font-size:14px}
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0 0}
+.pager a{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--navy);font-weight:600}
+.pager a:hover{border-color:var(--teal)}
+.pager small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.pager .next{text-align:right}
+.keys{display:none;margin:10px 0 0;text-align:center;font-size:12px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:0 0 26px}
+.tiles a{display:block;background:#fff;border:1px solid var(--line);border-top:4px solid var(--teal);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--navy)}
+.tiles a:hover{border-color:var(--teal)}
+.tiles b{display:block;font-size:17px}
+.tiles span{display:block;font-size:13px;color:var(--muted)}
+.section{font-size:19px;margin:0 0 6px;scroll-margin-top:16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.grid a{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--navy)}
-.grid a:hover{border-color:var(--teal)}
+.grid>a{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;text-decoration:none;color:var(--navy)}
+.grid>a:hover{border-color:var(--teal)}
 .grid b{display:block;margin-bottom:4px}
-.grid span{font-size:13px;color:var(--muted)}
+.grid span{display:block;font-size:13px;color:var(--muted)}
+.grid .tag{margin-top:8px;color:var(--teal);font-weight:600}
+#games{scroll-margin-top:16px}
 footer{font-size:12px;color:var(--muted);margin-top:28px}
-@media print{header,main>.back,.nav,.btn,footer{display:none}body{background:#fff}main{max-width:none;padding:0}.card,.game,.idea{break-inside:avoid;page-break-inside:avoid}.lesson-title{display:block!important;font-size:20px;font-weight:700;margin:0 0 12px}}
+@media(hover:hover) and (min-width:621px){.keys{display:block}}
+@media(max-width:620px){header{padding:12px 14px}.sitenav a{padding:7px 10px}.steps{gap:4px}.steps a{padding:6px 0}.steps span{display:none}.pager{grid-template-columns:1fr}.pager .next{text-align:left}}
+@media print{header,.crumbs,.steps,.pager,.keys,.tiles,.btn,footer{display:none}body{background:#fff}main{max-width:none;padding:0}.card,.game,.idea{break-inside:avoid;page-break-inside:avoid}.lesson-title{display:block!important;font-size:20px;font-weight:700;margin:0 0 12px}}
 .lesson-title{display:none}`;
 
+// Шапка с навигацией по сайту — одинаковая на всех страницах уроков (и такая же в генераторе).
+const GENERATOR = '../V-labs-generator.html';
 const head = (title) => `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title><style>${CSS}</style></head><body>
-<header><div class="mark">V</div><div><b>V-labs</b><small>SCRATCH 3.0 · УЧИМСЯ СОЗДАВАТЬ</small></div></header>
+<header><a class="brand" href="${GENERATOR}" title="На стартовую страницу"><div class="mark">V</div><div><b>V-labs</b><small>SCRATCH 3.0 · УЧИМСЯ СОЗДАВАТЬ</small></div></a><nav class="sitenav" aria-label="Разделы сайта"><a href="${GENERATOR}">Генератор заданий</a><a href="index.html" aria-current="page">Уроки</a><a href="index.html#games">Игры Scratch</a></nav></header>
 <main>`;
+const short = (title) => title.replace(/\s*\(.*\)$/, '');
+// Переключатель уроков: все восемь всегда под рукой, текущий подсвечен.
+const steps = (current) => `<nav class="steps" aria-label="Уроки курса">${LESSONS.map(x => `<a href="${x.n}.html" title="Урок ${x.n}. ${esc(x.title)}"${x.n === current ? ' aria-current="page"' : ''}><b>${x.n}</b><span>${esc(short(x.title))}</span></a>`).join('')}</nav>`;
 
 const files = [];
 
@@ -97,11 +132,14 @@ for (const l of LESSONS) {
   const games = l.games.map((g, i) => `<div class="game"><b>${esc(g)}</b><p>${esc(GAME_DESC[g] || '')}</p>${i === 0 ? `<a class="btn" href="games/${GAME_FILES[l.n]}" download>Скачать игру для Scratch (.sb3)</a><p class="download-note">Открой файл в Scratch 3.0: Файл → Загрузить с компьютера. Проект отмечен знаком V Labs, подсказки по клавишам — в заметках рядом с блоками.</p>` : ''}</div>`).join('');
   const prev = LESSONS.find(x => x.n === l.n - 1);
   const next = LESSONS.find(x => x.n === l.n + 1);
-  const nav = `<div class="nav"><span>${prev ? `<a class="back" href="${prev.n}.html">← Урок ${prev.n}. ${esc(prev.title)}</a>` : ''}</span><span>${next ? `<a class="back" href="${next.n}.html">Урок ${next.n}. ${esc(next.title)} →</a>` : ''}</span></div>`;
+  const nav = `<nav class="pager" aria-label="Соседние уроки">${prev ? `<a rel="prev" href="${prev.n}.html"><small>← Предыдущий урок</small>Урок ${prev.n}. ${esc(prev.title)}</a>` : `<a href="index.html"><small>← К списку</small>Все уроки и игры</a>`}${next ? `<a class="next" rel="next" href="${next.n}.html"><small>Следующий урок →</small>Урок ${next.n}. ${esc(next.title)}</a>` : `<a class="next" href="index.html#games"><small>Курс пройден →</small>Все игры Scratch</a>`}</nav>
+<p class="keys">Клавиши ← и → на клавиатуре листают уроки</p>
+<script>document.addEventListener('keydown',function(e){if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey)return;var rel=e.key==='ArrowLeft'?'prev':e.key==='ArrowRight'?'next':'';var a=rel&&document.querySelector('a[rel='+rel+']');if(a)location.href=a.href});</script>`;
 
   const html = `${head(`Урок ${l.n}. ${esc(l.title)} · V-labs`)}
 <span class="lesson-title">V-labs · Scratch 3.0 · Урок ${l.n}. ${esc(l.title)}</span>
-<a class="back" href="index.html">← Все уроки</a>
+<nav class="crumbs" aria-label="Вы здесь"><a href="${GENERATOR}">V-labs</a> › <a href="index.html">Уроки</a> › Урок ${l.n}</nav>
+${steps(l.n)}
 <h1>Урок ${l.n}. ${esc(l.title)}</h1>
 <p class="goal">${esc(l.goal)}</p>
 <div class="card"><h2>Изучаемые блоки</h2><ul>${list(l.blocks)}</ul></div>
@@ -116,16 +154,19 @@ ${nav}
   files.push([`${l.n}.html`, html]);
 }
 
-// Оглавление
-const cards = LESSONS.map(l => `<a href="${l.n}.html"><b>Урок ${l.n}. ${esc(l.title)}</b><span>${esc(l.goal)}</span></a>`).join('');
-const gameCards = LESSONS.map(l => `<div class="game"><b>Урок ${l.n}. ${esc(l.title)}</b><p>${esc(l.games[0])}</p><a class="btn" href="games/${GAME_FILES[l.n]}" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="${l.n}.html">Страница урока</a></div>`).join('');
-files.push(['index.html', `${head('Уроки Scratch · V-labs')}
-<a class="back" href="../V-labs-generator.html">← К генератору заданий</a>
-<h1>Уроки Scratch</h1>
-<p class="goal">Программа курса: каждый тип блоков разбираем через практику. Выберите урок — там блоки, практика, идея и игры, которые собираем на занятии.</p>
-<div class="grid">${cards}</div>
-<div class="card"><h2>Все проекты Scratch для скачивания</h2><p class="goal">Загрузите стартовый проект нужного урока. На странице урока кнопка скачивания также находится рядом с описанием игры.</p><div class="grid">${gameCards}</div></div>
-<footer>V-labs · Scratch 3.0 · ${LESSONS.length} уроков и стартовых проектов</footer>
+// Оглавление: обзор всего, что есть в проекте
+const cards = LESSONS.map(l => `<a href="${l.n}.html"><b>Урок ${l.n}. ${esc(l.title)}</b><span>${esc(l.goal)}</span><span class="tag">Игра: ${esc(l.games[0])}</span></a>`).join('');
+const gameCards = LESSONS.map(l => `<div class="game"><b>${esc(l.games[0])}</b><p>Урок ${l.n}. ${esc(l.title)}. ${esc(GAME_DESC[l.games[0]] || '')}</p><a class="btn" href="games/${GAME_FILES[l.n]}" download>Скачать проект (.sb3)</a> <a class="btn ghost" href="${l.n}.html">Страница урока</a></div>`).join('');
+files.push(['index.html', `${head('Уроки и игры Scratch · V-labs')}
+<nav class="crumbs" aria-label="Вы здесь"><a href="${GENERATOR}">V-labs</a> › Уроки</nav>
+<h1>Уроки и игры Scratch</h1>
+<p class="goal">Всё, что есть в проекте, на одной странице: программа курса, игры для скачивания и генератор писем с заданиями.</p>
+<div class="tiles"><a href="#lessons"><b>${LESSONS.length} уроков</b><span>Блоки, практика и ключевая идея по каждой теме</span></a><a href="#games"><b>${LESSONS.length} игр Scratch</b><span>Готовые проекты .sb3 — по одному на урок</span></a><a href="${GENERATOR}"><b>Генератор заданий</b><span>Письмо ученику и родителям за пару минут</span></a></div>
+<h2 class="section" id="lessons">Программа курса</h2>
+<p class="goal">Каждый тип блоков разбираем через практику. Выберите урок — там блоки, практика, идея и игры, которые собираем на занятии.</p>
+<div class="grid" style="margin:0 0 26px">${cards}</div>
+<div class="card" id="games"><h2>Все проекты Scratch для скачивания</h2><p class="goal">Загрузите проект нужного урока и откройте его в Scratch 3.0: Файл → Загрузить с компьютера. На странице урока кнопка скачивания также находится рядом с описанием игры.</p><div class="grid">${gameCards}</div><p class="download-note" style="margin-top:14px"><a class="btn ghost" href="${SCRATCH}" target="_blank" rel="noopener">Открыть редактор Scratch</a></p></div>
+<footer>V-labs · Scratch 3.0 · ${LESSONS.length} уроков и ${LESSONS.length} игр · <a href="${GENERATOR}" style="color:inherit">Генератор заданий</a></footer>
 </main></body></html>
 `]);
 
