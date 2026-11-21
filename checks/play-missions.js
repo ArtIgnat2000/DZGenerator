@@ -33,7 +33,7 @@ function serve() {
     const s = http.createServer((q, r) => {
       const u = decodeURIComponent(q.url.split('?')[0]);
       if (u === '/') { r.writeHead(200, { 'content-type': 'text/html' }); return r.end(PAGE); }
-      const f = u.startsWith('/lib/') ? path.join(DEPS, u.slice(5)) : path.join(REPO, 'lessons/games', u.slice(1));
+      const f = u.startsWith('/lib/') ? path.join(DEPS, u.slice(5)) : path.join(REPO, u.startsWith('/practice/') ? 'lessons' : 'lessons/games', u.slice(1));
       fs.readFile(f, (e, b) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': f.endsWith('.js') ? 'text/javascript' : 'application/octet-stream' }); r.end(b); });
     }).listen(0, () => res(s));
   });
@@ -96,8 +96,10 @@ const results = [];
 function ok(c, m, extra) { results.push(!!c); console.log((c ? 'ok   ' : 'FAIL ') + m + (extra !== undefined ? '  → ' + JSON.stringify(extra) : '')) }
 const shot = (p, n) => process.env.PLAY_SHOTS ? p.screenshot({ path: path.join(process.env.PLAY_SHOTS, n + '.png') }) : null;
 function done() { const f = results.filter(x => !x).length; console.log(f ? 'FAILED ' + f : 'ALL OK ' + results.length); return f }
+// Стенд (браузер, движок, помощники «игрока») нужен и проверке практики: checks/play-practice.js
+module.exports = { open, game, ok, done, shot };
 
-(async () => {
+const main = async () => {
   const env = await open();
   let p, r; const want = n => process.argv.length < 3 || process.argv.slice(2).includes(String(n));
 
@@ -418,4 +420,5 @@ function done() { const f = results.filter(x => !x).length; console.log(f ? 'FAI
   }
 
   await env.b.close(); env.srv.close(); process.exit(done() ? 1 : 0);
-})().catch(e => { console.error('ERR', e); process.exit(1) });
+};
+if (require.main === module) main().catch(e => { console.error('ERR', e); process.exit(1) });
