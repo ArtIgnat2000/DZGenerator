@@ -148,8 +148,8 @@ function lessonPage(course, l) {
   const i = course.lessons.indexOf(l);
   const prev = course.lessons[i - 1];
   const next = course.lessons[i + 1];
-  const gameHref = (file) => course.n === 1 ? `games/${file}` : `../games/${file}`;
-  const practiceHref = (tail) => course.n === 1 ? `practice/${tail}` : `../practice/${tail}`;
+  const gameHref = (file) => `games/${file}`;
+  const practiceHref = (tail) => `practice/${tail}`;
   const near = (x) => course.n === 1 ? `${x}.html` : `${x}.html`;
 
   const ownGame = !!(l.file && l.games && l.games.length);
