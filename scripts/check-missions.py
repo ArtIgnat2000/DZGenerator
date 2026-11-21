@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMES = ROOT / 'lessons' / 'games'
+GAMES2 = ROOT / 'lessons' / 'course-2' / 'games'
 
 # (спрайт, блок, {поле или вход: значение}, сколько раз встречается, фразы миссии, которые на это опираются)
 FACTS = {
@@ -76,6 +77,43 @@ FACTS = {
 }
 
 
+# Курс 2: миссия «Готовимся к уроку» проверяет демо-игру урока.
+FACTS2 = {
+    1: ('01-chase.sb3', [
+        ('Лис', 'motion_changexby', {'DX': '15'}, 1, ['[изменить x на 15]']),
+    ]),
+    2: ('02-platform.sb3', [
+        ('Герой', 'data_changevariableby', {'VARIABLE': 'Скорость', 'VALUE': '-1'}, 1,
+         ['[изменить Скорость на -1]']),
+        ('Герой', 'data_setvariableto', {'VARIABLE': 'Скорость', 'VALUE': '14'}, 1, ['+14', 'Скорость']),
+    ]),
+    3: ('03-maze.sb3', [
+        ('Робот', 'sensing_touchingobject', {'TOUCHINGOBJECTMENU': 'Стены'}, 4,
+         ['[если касается Стены, то …]']),
+    ]),
+    4: ('04-catcher.sb3', [
+        ('Яблоко', 'control_create_clone_of', {'CLONE_OPTION': '_myself_'}, 1, ['[создать клон]']),
+        ('Яблоко', 'control_delete_this_clone', {}, 1, ['[удалить клон]']),
+    ]),
+    5: ('05-pursuit.sb3', [
+        ('Тень', 'motion_pointtowards', {'TOWARDS': 'Лис'}, 1, ['[направиться к Лис]']),
+        ('Тень', 'motion_movesteps', {'STEPS': '2'}, 1, ['[двигаться на 2 шагов]']),
+    ]),
+    6: ('06-shooter.sb3', [
+        ('Пуля', 'control_start_as_clone', {}, 1, ['[когда я начинаю как клон]']),
+        ('Пуля', 'control_create_clone_of', {'CLONE_OPTION': '_myself_'}, 1, ['[создать клон]']),
+    ]),
+    7: ('07-quest.sb3', [
+        ('Предмет 1', 'looks_switchbackdropto', {'BACKDROP': 'Замок'}, 1, ['[переключить фон на Замок]']),
+        ('Предмет 1', 'event_broadcast', {'BROADCAST_INPUT': 'Уровень 2'}, 1, ['[отправить Уровень 2]']),
+    ]),
+    8: ('08-own-game.sb3', [
+        ('Герой', 'sensing_askandwait', {}, 1, ['[спросить … и ждать]']),
+        ('Герой', 'data_setvariableto', {'VARIABLE': 'Скорость', 'VALUE': '14'}, 1, ['«Скорость»']),
+    ]),
+}
+
+
 def value(blocks, block, name):
     """Значение поля или входа блока так, как его видит ученик; None — если там выражение."""
     if name in block.get('fields', {}):
@@ -92,25 +130,24 @@ def value(blocks, block, name):
 
 
 def mission_texts():
-    """Строки LESSONS из генератора: номер урока → исходный текст (миссия и ответы)."""
+    """Строки LESSONS и GAME_LESSONS из генератора: номер урока → исходный текст."""
     src = (ROOT / 'V-labs-generator.html').read_text(encoding='utf-8')
-    # Курс 1 идёт первым; курс 2 начинается с const GAME_LESSONS= и в этой проверке не участвует:
-    # факты ниже относятся к играм курса 1.
-    first_course = src.split('const GAME_LESSONS=', 1)[0]
-    found = {int(m.group(1)): m.group(0) for m in re.finditer(r'^\{n:(\d+),.*$', first_course, re.M)}
-    return found
+    first = src.split('const GAME_LESSONS=', 1)[0]
+    found = {int(m.group(1)): m.group(0) for m in re.finditer(r'^\{n:(\d+),.*$', first, re.M)}
+    second = src.split('const GAME_LESSONS=', 1)[1].split('\n];', 1)[0]
+    found2 = {int(m.group(1)): m.group(0) for m in re.finditer(r'^\{n:(\d+),.*$', second, re.M)}
+    return found, found2
 
 
-def main():
-    texts, errors = mission_texts(), []
-    for n, (file, facts) in sorted(FACTS.items()):
-        project = json.loads(zipfile.ZipFile(GAMES / file).read('project.json'))
+def check(course, facts_map, games_dir, texts, errors):
+    for n, (file, facts) in sorted(facts_map.items()):
+        project = json.loads(zipfile.ZipFile(games_dir / file).read('project.json'))
         targets = {('Stage' if t['isStage'] else t['name']): t for t in project['targets']}
         text = texts.get(n, '')
         if not text:
-            errors.append(f'урок {n}: в генераторе нет строки LESSONS')
+            errors.append(f'курс {course}, урок {n}: в генераторе нет строки урока')
         for sprite, opcode, want, count, phrases in facts:
-            what = f'урок {n}, {file}: «{sprite}» · {opcode} {want or ""}'.rstrip()
+            what = f'курс {course}, урок {n}, {file}: «{sprite}» · {opcode} {want or ""}'.rstrip()
             target = targets.get(sprite)
             if not target:
                 errors.append(f'{what}: в игре нет такого спрайта')
@@ -123,8 +160,14 @@ def main():
             for phrase in phrases:
                 if phrase not in text:
                     errors.append(f'{what}: в миссии нет фразы «{phrase}» — текст изменён, проверьте, что он сходится с игрой')
-        if not any(e.startswith(f'урок {n}') for e in errors):
-            print(f'урок {n}: {file} — сходится с игрой, проверено фактов: {len(facts)}')
+        if not any(e.startswith(f'курс {course}, урок {n}') for e in errors):
+            print(f'курс {course}, урок {n}: {file} — сходится с игрой, проверено фактов: {len(facts)}')
+
+
+def main():
+    (texts1, texts2), errors = mission_texts(), []
+    check(1, FACTS, GAMES, texts1, errors)
+    check(2, FACTS2, GAMES2, texts2, errors)
     if errors:
         for e in errors:
             print('::error::' + e, file=sys.stderr)

@@ -6,7 +6,9 @@
 поэтому кадр всегда соответствует игре.
 
 Запуск:   python3 scripts/build-shots.py [каталог для SVG]
+          python3 scripts/build-shots.py --course2 [каталог для SVG]
 По умолчанию SVG пишутся во временный каталог /tmp/vlabs-shots.
+С ключом --course2 читаются игры и кадры курса 2 (lessons/course-2/games).
 
 В письмо попадает PNG (почтовые программы не показывают SVG), поэтому после
 сборки каждый SVG нужно один раз открыть в браузере размером 480×360 и сохранить
@@ -21,6 +23,7 @@ from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parent.parent
 GAMES = ROOT / 'lessons' / 'games'
+GAMES2 = ROOT / 'lessons' / 'course-2' / 'games'
 
 # Что показать в кадре сверх начального состояния: значения переменных,
 # спрятанные до запуска клоны, содержимое списка. Только для наглядности.
@@ -33,6 +36,20 @@ EXTRA = {
     '06-sensing': {'vars': {'Подсказка': 'Тепло', 'Найдено': 2, 'Мышь x': -40, 'Мышь y': -12}, 'move': {'Следопыт': (-40, -12)}},
     '07-operators': {'vars': {'Очки': 3, 'Вопрос': 4}},
     '08-data': {'vars': {'Счётчик': 3}, 'list': ['Собака', 'Велосипед', 'Полететь в космос']},
+}
+
+# Кадры курса 2: показываем, как игра выглядит в разгаре, а не в начальной точке.
+EXTRA2 = {
+    '01-chase': {'vars': {'Очки': 2, 'Время': 18}},
+    '02-platform': {'vars': {'Монеты': 1}, 'move': {'Герой': (60, 62)}},
+    '03-maze': {'vars': {'Ключи': 2, 'Жизни': 2}},
+    '04-catcher': {'vars': {'Очки': 4, 'Жизни': 2, 'Время': 12},
+                   'clones': [('Яблоко', 80, -110), ('Яблоко', -60, -40), ('Бомба', 150, 40)]},
+    '05-pursuit': {'vars': {'Ключи': 2, 'Жизни': 2}, 'move': {'Тень': (-40, -10)}},
+    '06-shooter': {'vars': {'Очки': 3, 'Время': 20},
+                   'clones': [('Мишень', 50, 120), ('Мишень', -100, 80), ('Пуля', 30, 30)]},
+    '07-quest': {'vars': {'Найдено': 2, 'Уровень': 1}},
+    '08-own-game': {'vars': {'Очки': 2, 'Жизни': 2}},
 }
 
 
@@ -84,8 +101,8 @@ def monitor(m, value):
             f'<text x="{x + lw + 10 + vw / 2}" y="{y + 14}" font-size="11.5" text-anchor="middle" fill="#fff" {font}>{val}</text>')
 
 
-def scene(path):
-    extra = EXTRA.get(path.stem, {})
+def scene(path, extra_map=EXTRA):
+    extra = extra_map.get(path.stem, {})
     with zipfile.ZipFile(path) as z:
         p = json.loads(z.read('project.json'))
         targets = {t['name']: t for t in p['targets']}
@@ -108,11 +125,13 @@ def scene(path):
 
 
 def main():
-    out = Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp/vlabs-shots')
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    course2 = '--course2' in sys.argv[1:]
+    out = Path(args[0] if args else '/tmp/vlabs-shots')
     out.mkdir(parents=True, exist_ok=True)
-    games = sorted(GAMES.glob('*.sb3'))
+    games = sorted((GAMES2 if course2 else GAMES).glob('*.sb3'))
     for path in games:
-        (out / f'{path.stem}.svg').write_text(scene(path), encoding='utf-8')
+        (out / f'{path.stem}.svg').write_text(scene(path, EXTRA2 if course2 else EXTRA), encoding='utf-8')
     print(f'Кадров: {len(games)} → {out}')
 
 
