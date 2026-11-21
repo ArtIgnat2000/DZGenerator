@@ -94,7 +94,10 @@ def value(blocks, block, name):
 def mission_texts():
     """Строки LESSONS из генератора: номер урока → исходный текст (миссия и ответы)."""
     src = (ROOT / 'V-labs-generator.html').read_text(encoding='utf-8')
-    found = {int(m.group(1)): m.group(0) for m in re.finditer(r'^\{n:(\d+),.*$', src, re.M)}
+    # Курс 1 идёт первым; курс 2 начинается с const GAME_LESSONS= и в этой проверке не участвует:
+    # факты ниже относятся к играм курса 1.
+    first_course = src.split('const GAME_LESSONS=', 1)[0]
+    found = {int(m.group(1)): m.group(0) for m in re.finditer(r'^\{n:(\d+),.*$', first_course, re.M)}
     return found
 
 

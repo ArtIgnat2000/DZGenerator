@@ -50,6 +50,7 @@ jobs:
           grep -q '520px' V-labs-generator.html && grep -q '980px' V-labs-generator.html && echo "Print size 520x980 OK"
           grep -q 'paginatePrint' V-labs-generator.html && echo "paginatePrint OK"
           grep -q 'const LESSONS=' V-labs-generator.html && echo "Lesson templates OK"
+          grep -q 'const COURSES=' V-labs-generator.html && echo "Course structure OK"
           COUNT=$(grep -o 'data:image' V-labs-generator.html | wc -l)
           echo "Embedded previews: $COUNT"
           test "$COUNT" -ge 6
@@ -78,8 +79,54 @@ jobs:
             test -f "lessons/$i.html" || { echo "::error::Missing lessons/$i.html"; exit 1; }
           done
           test -f lessons/index.html || { echo "::error::Missing lessons/index.html"; exit 1; }
+          for i in 1 2 3 4 5 6 7 8; do
+            test -f "lessons/course-2/$i.html" || { echo "::error::Missing lessons/course-2/$i.html"; exit 1; }
+          done
+          test -f lessons/course-2/index.html || { echo "::error::Missing lessons/course-2/index.html"; exit 1; }
           grep -q 'href="lessons/index.html"' V-labs-generator.html && echo "Generator links to lesson pages OK"
           echo "Lesson pages OK"
+
+      - name: Check course structure
+        run: |
+          node - <<'JS'
+          const fs = require('fs');
+          const src = fs.readFileSync('V-labs-generator.html', 'utf8');
+          const a = src.indexOf('const LESSONS='), b = src.indexOf('\nconst $=id=>', a);
+          const { LESSONS, COURSES } = new Function(src.slice(a, b) + '\nreturn {LESSONS, COURSES};')();
+          const fail = m => { console.error('::error::' + m); process.exit(1); };
+          if (COURSES.length !== 3) fail(`expected 3 courses, got ${COURSES.length}`);
+          const [c1, c2, c3] = COURSES;
+          if (c1.n !== 1 || c1.lessons.length !== 8) fail('course 1 must keep its 8 lessons');
+          if (c2.n !== 2 || c2.lessons.length !== 8) fail('course 2 must have 8 lessons');
+          if (!c3.coming || c3.lessons.length !== 0) fail('course 3 must stay a placeholder');
+          if (c1.lessons !== LESSONS) fail('course 1 must use the original LESSONS array');
+          const seen = new Set();
+          for (const c of COURSES) for (const l of c.lessons) {
+            const key = `${c.n}-${l.n}`, where = `lesson ${key}`;
+            if (seen.has(key)) fail(`${where}: duplicate lesson key`); seen.add(key);
+            if (l.course !== c.n) fail(`${where}: lesson.course is ${l.course}`);
+            if (!/^#[0-9A-F]{6}$/i.test(l.color) || !/^#[0-9A-F]{6}$/i.test(l.dark)) fail(`${where}: color/dark must be #RRGGBB`);
+            for (const k of ['goal', 'blocks', 'practice', 'idea', 'work']) if (typeof l[k] !== 'string' || !l[k].trim()) fail(`${where}: field "${k}" is empty`);
+            for (const k of ['hook', 'intro', 'play', 'find', 'change', 'more', 'bring', 'key'])
+              if (typeof l.prep?.[k] !== 'string' || !l.prep[k].trim()) fail(`${where}: mission field "${k}" is empty`);
+            if (!/\[[^\]]+\]/.test(l.prep.find)) fail(`${where}: step "find" must name a block in [brackets]`);
+            if (l.prep.bring.split('\n').filter(x => x.trim()).length !== 3) fail(`${where}: "bring" must have 3 lines`);
+          }
+          for (const l of c2.lessons) {
+            const where = `course 2 lesson ${l.n}`;
+            if (l.file || (l.games && l.games.length)) fail(`${where}: course 2 has no own games or files yet`);
+            const w = l.warmup && c1.lessons.find(x => x.n === l.warmup.n);
+            if (!w) fail(`${where}: warmup must point to a course 1 lesson`);
+            if (!w.games[Math.max(0, +l.warmup.game || 0)]) fail(`${where}: warmup game does not exist`);
+            const page = fs.readFileSync(`lessons/course-2/${l.n}.html`, 'utf8');
+            if (page.includes('-start.sb3') || page.includes('-solution.sb3')) fail(`${where}: page links to a missing practice file`);
+            if (!page.includes(`?course=2&lesson=${l.n}`)) fail(`${where}: page has no teacher link with the course`);
+            if (!page.includes(`../games/${w.file}`)) fail(`${where}: page has no warmup game link`);
+          }
+          const index = fs.readFileSync('lessons/index.html', 'utf8');
+          if (!index.includes('course-2/index.html')) fail('lessons/index.html does not link to course 2');
+          console.log('Courses: 3, lessons: 8 + 8, course 2 warmups and pages OK');
+          JS
 
       - name: Check Scratch game packages
         run: |
