@@ -118,8 +118,12 @@ jobs:
             if (l.warmup) fail(`${where}: course 2 has its own demo game, warmup is no longer used`);
             for (const k of ['look', 'own']) if (typeof l.solve?.[k] !== 'string' || !l.solve[k].trim()) fail(`${where}: solve.${k} is empty`);
             const page = fs.readFileSync(`lessons/course-2/${l.n}.html`, 'utf8');
-            if (!page.includes(`../games/${l.file}`)) fail(`${where}: page has no demo game link`);
-            if (!page.includes(`../practice/${l.file.replace('.sb3', '')}-start.sb3`)) fail(`${where}: page has no starter link`);
+            const gameRel = `games/${l.file}`, startRel = `practice/${l.file.replace('.sb3', '')}-start.sb3`;
+            if (!page.includes(`href="${gameRel}"`)) fail(`${where}: page has no demo game link`);
+            if (!fs.existsSync(`lessons/course-2/${gameRel}`)) fail(`${where}: demo game file is missing`);
+            if (!page.includes(`href="${startRel}"`)) fail(`${where}: page has no starter link`);
+            if (!fs.existsSync(`lessons/course-2/${startRel}`)) fail(`${where}: starter file is missing`);
+            if (page.includes('../games/') || page.includes('../practice/')) fail(`${where}: page escapes its own folder`);
             if (page.includes('-solution.sb3')) fail(`${where}: page links to a solution`);
             if (!page.includes(`?course=2&lesson=${l.n}`)) fail(`${where}: page has no teacher link with the course`);
           }
