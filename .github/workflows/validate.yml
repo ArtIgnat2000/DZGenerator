@@ -121,6 +121,73 @@ jobs:
                   print(f'{path}: {len(project["targets"])} targets, {len(opcodes)} blocks, {themed} on the lesson topic, V Labs badge OK')
           PY
 
+      - name: Check practice starters and solutions
+        run: |
+          python3 -m py_compile scripts/build-practice.py
+          python3 scripts/build-practice.py --check
+          python3 - <<'PY'
+          import glob, json, zipfile
+          STEMS = ['01-events', '02-motion', '03-looks', '04-sound', '05-control', '06-sensing', '07-operators', '08-data']
+          files = sorted(glob.glob('lessons/practice/*.sb3'))
+          assert len(files) == 16, f'Expected 16 practice projects, got {len(files)}'
+
+          def load(path):
+              with zipfile.ZipFile(path) as archive:
+                  project = json.loads(archive.read('project.json'))
+                  names = set(archive.namelist())
+                  assert project['extensions'] == [], f'{path}: unexpected Scratch extensions'
+                  for target in project['targets']:
+                      for asset in target['costumes'] + target['sounds']:
+                          assert asset['md5ext'] in names, f'{path}: missing {asset["md5ext"]}'
+                          if asset['dataFormat'] == 'svg':
+                              svg = archive.read(asset['md5ext']).decode('utf-8')
+                              for unsupported in ('<text', '<filter', 'Gradient', 'rx='):
+                                  assert unsupported not in svg, f'{path}: unsupported SVG feature {unsupported}'
+                      notes = [c['text'] for c in target['comments'].values()]
+                      assert any('V Labs' in text for text in notes), f'{path}: {target["name"]} has no V Labs note'
+                  return project
+
+          def look(project):
+              return [(t['name'], [c['md5ext'] for c in t['costumes']], [s['md5ext'] for s in t['sounds']]) for t in project['targets']]
+
+          for stem in STEMS:
+              start, done = load(f'lessons/practice/{stem}-start.sb3'), load(f'lessons/practice/{stem}-solution.sb3')
+              assert look(start) == look(done), f'{stem}: the starter and the solution have different sprites, costumes or sounds'
+              for target in start['targets']:
+                  assert not target['blocks'], f'{stem}: the starter has blocks in {target["name"]}'
+                  assert not target['variables'] and not target['lists'] and not target['broadcasts'], f'{stem}: the starter has data in {target["name"]}'
+                  if not target['isStage']:
+                      assert target['visible'], f'{stem}: {target["name"]} is hidden in the starter'
+              notes = ' '.join(c['text'] for t in start['targets'] for c in t['comments'].values())
+              assert 'Заготовка' in notes and 'Что собираем на уроке' in notes, f'{stem}: the starter has no practice steps'
+              opcodes = [b['opcode'] for t in done['targets'] for b in t['blocks'].values() if not b['shadow']]
+              assert 10 <= len(opcodes) <= 60, f'{stem}: the solution has {len(opcodes)} blocks, expected a lesson-sized program'
+              assert not any(op.startswith('procedures_') for op in opcodes), f'{stem}: custom Scratch block'
+              assert all('Разгадка' in c['text'] for t in done['targets'] for c in t['comments'].values()), f'{stem}: a solution note is not marked'
+              print(f'{stem}: starter {len(start["targets"])} targets without program, solution {len(opcodes)} blocks')
+          PY
+          node - <<'JS'
+          const fs = require('fs');
+          const src = fs.readFileSync('V-labs-generator.html', 'utf8');
+          const a = src.indexOf('const LESSONS='), b = src.indexOf('\n];', a);
+          const LESSONS = new Function(src.slice(a, b + 3) + '\nreturn LESSONS;')();
+          const fail = m => { console.error('::error::' + m); process.exit(1); };
+          for (const l of LESSONS) {
+            const where = `lesson ${l.n}`, stem = l.file.replace('.sb3', '');
+            for (const kind of ['start', 'solution'])
+              if (!fs.existsSync(`lessons/practice/${stem}-${kind}.sb3`)) fail(`${where}: missing lessons/practice/${stem}-${kind}.sb3`);
+            if (typeof l.work !== 'string' || !l.work.trim()) fail(`${where}: practice name "work" is empty`);
+            for (const k of ['look', 'own'])
+              if (typeof l.solve?.[k] !== 'string' || !l.solve[k].trim()) fail(`${where}: solution letter field "${k}" is empty`);
+            // Разгадка до урока не выдаётся: на странице урока есть заготовка, но нет готового проекта практики.
+            const page = fs.readFileSync(`lessons/${l.n}.html`, 'utf8');
+            if (!page.includes(`practice/${stem}-start.sb3`)) fail(`${where}: the lesson page has no starter link`);
+            if (page.includes('-solution.sb3')) fail(`${where}: the lesson page links to the solution`);
+            console.log(`${where}: practice "${l.work}", starter and solution OK`);
+          }
+          if (fs.readFileSync('lessons/index.html', 'utf8').includes('-solution.sb3')) fail('lessons/index.html links to a solution');
+          JS
+
       - name: Check lesson missions and game shots
         run: |
           python3 -m py_compile scripts/build-shots.py
