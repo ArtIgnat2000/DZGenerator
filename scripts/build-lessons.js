@@ -144,7 +144,7 @@ ${steps(l.n)}
 <div class="card"><h2>Игры, которые собираем</h2>${games}</div>
 <div class="card"><h2>Открыть Scratch</h2><p style="margin:0 0 10px;color:var(--muted);font-size:14px">Редактор работает в браузере, регистрация не обязательна для тренировки. Сохранение проекта — по кнопке «Сохранить сейчас».</p><a class="btn" href="${SCRATCH}" target="_blank" rel="noopener">Открыть редактор Scratch</a></div>
 ${nav}
-<p class="teacher">Преподавателю: <a href="${GENERATOR}?lesson=${l.n}">собрать письмо с заданием по уроку ${l.n}</a></p>
+<p class="teacher">Преподавателю: <a href="${GENERATOR}?lesson=${l.n}">собрать письмо по уроку ${l.n}</a></p>
 <footer>V-labs · Scratch 3.0 · Урок ${l.n} из ${LESSONS.length}</footer>
 </main></body></html>
 `;

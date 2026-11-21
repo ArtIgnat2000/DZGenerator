@@ -121,6 +121,31 @@ jobs:
                   print(f'{path}: {len(project["targets"])} targets, {len(opcodes)} blocks, {themed} on the lesson topic, V Labs badge OK')
           PY
 
+      - name: Check lesson missions and game shots
+        run: |
+          python3 -m py_compile scripts/build-shots.py
+          node - <<'JS'
+          const fs = require('fs');
+          const src = fs.readFileSync('V-labs-generator.html', 'utf8');
+          const a = src.indexOf('const LESSONS='), b = src.indexOf('\n];', a);
+          const LESSONS = new Function(src.slice(a, b + 3) + '\nreturn LESSONS;')();
+          const fail = m => { console.error('::error::' + m); process.exit(1); };
+          for (const l of LESSONS) {
+            const where = `lesson ${l.n}`;
+            if (!/^#[0-9A-F]{6}$/i.test(l.color) || !/^#[0-9A-F]{6}$/i.test(l.dark)) fail(`${where}: color/dark must be #RRGGBB`);
+            for (const k of ['hook', 'intro', 'play', 'find', 'change', 'more', 'bring', 'key'])
+              if (typeof l.prep?.[k] !== 'string' || !l.prep[k].trim()) fail(`${where}: mission field "${k}" is empty`);
+            if (!/\[[^\]]+\]/.test(l.prep.find)) fail(`${where}: step "find" must name a block in [brackets]`);
+            if (l.prep.bring.split('\n').filter(x => x.trim()).length !== 3) fail(`${where}: "bring" must have 3 lines`);
+            const png = `lessons/games/${l.file.replace('.sb3', '.png')}`;
+            if (!fs.existsSync(png)) fail(`${where}: missing game shot ${png}`);
+            const h = fs.readFileSync(png);
+            if (h.toString('latin1', 1, 4) !== 'PNG' || h.readUInt32BE(16) !== 960 || h.readUInt32BE(20) !== 720) fail(`${png}: must be a 960x720 PNG`);
+            if (h.length > 200000) fail(`${png}: larger than 200 KB`);
+            console.log(`${where}: mission "${l.prep.hook}", shot ${png} OK`);
+          }
+          JS
+
       - name: Check generator file size
         run: |
           SIZE=$(stat -c%s V-labs-generator.html)
