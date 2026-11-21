@@ -200,7 +200,7 @@ for (const course of COURSES) {
   for (const l of course.lessons) files.push([`${dirOf(course)}${l.n}.html`, lessonPage(course, l)]);
 }
 
-// Страница курса 2: программа без скачиваемых игр — они появятся отдельным релизом.
+// Страница курса 2: программа, ссылки на игры и заготовки.
 const course2 = COURSES.find(c => c.n === 2);
 if (course2) {
   const rows = course2.lessons.map(l => `<li><a class="row" href="${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><a class="dl" href="games/${l.file}" download title="${esc(GAME_DESC[l.games[0]] || '')}">Скачать игру <b>«${esc(l.games[0])}»</b></a></li>`).join('');
@@ -256,6 +256,15 @@ for (const [name, html] of files) {
   }
 }
 if (CHECK) {
-  if (bad) { console.error(`Страниц уроков надо пересобрать: ${bad}. Запустите node scripts/build-lessons.js`); process.exit(1); }
-  console.log(`Страницы уроков совпадают с данными: ${files.length} файлов, ${COURSES.reduce((n, c) => n + c.lessons.length, 0)} уроков.`);
+  for (const [name, html] of files) {
+    for (const m of html.matchAll(/href="([^"]+)"/g)) {
+      const href = m[1];
+      if (/^(https?:|#|mailto:)/.test(href)) continue;
+      const rel = href.split('#')[0].split('?')[0];
+      const target = path.join(OUT, path.dirname(name), rel);
+      if (!fs.existsSync(target)) { console.error(`БИТАЯ ССЫЛКА: lessons/${name} → ${href}`); bad++; }
+    }
+  }
+  if (bad) { console.error(`Страниц уроков надо пересобрать или починить ссылки: ${bad}.`); process.exit(1); }
+  console.log(`Страницы уроков совпадают с данными: ${files.length} файлов, ${COURSES.reduce((n, c) => n + c.lessons.length, 0)} уроков; ссылки целы.`);
 }
