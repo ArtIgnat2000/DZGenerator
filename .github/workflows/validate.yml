@@ -124,6 +124,7 @@ jobs:
       - name: Check lesson missions and game shots
         run: |
           python3 -m py_compile scripts/build-shots.py
+          python3 scripts/check-missions.py
           node - <<'JS'
           const fs = require('fs');
           const src = fs.readFileSync('V-labs-generator.html', 'utf8');

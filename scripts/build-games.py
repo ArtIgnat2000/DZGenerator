@@ -1114,7 +1114,7 @@ def game_sensing():
               forever([
                   point_to('_mouse_'),
                   if_(not_(touching('_mouse_')), [move(div(distance('_mouse_'), 6))]),
-                  if_else(lt(distance('Клад'), 45), [set_var('Подсказка', 'Горячо!')], [
+                  if_else(lt(distance('Клад'), 80), [set_var('Подсказка', 'Горячо!')], [
                       if_else(lt(distance('Клад'), 130), [set_var('Подсказка', 'Тепло')],
                               [set_var('Подсказка', 'Холодно')])]),
                   if_(touching('Клад'), [
