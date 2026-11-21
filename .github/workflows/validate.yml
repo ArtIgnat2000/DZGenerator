@@ -114,18 +114,18 @@ jobs:
           }
           for (const l of c2.lessons) {
             const where = `course 2 lesson ${l.n}`;
-            if (l.file || (l.games && l.games.length)) fail(`${where}: course 2 has no own games or files yet`);
-            const w = l.warmup && c1.lessons.find(x => x.n === l.warmup.n);
-            if (!w) fail(`${where}: warmup must point to a course 1 lesson`);
-            if (!w.games[Math.max(0, +l.warmup.game || 0)]) fail(`${where}: warmup game does not exist`);
+            if (!l.file || !l.games?.length) fail(`${where}: own game file and title are required`);
+            if (l.warmup) fail(`${where}: course 2 has its own demo game, warmup is no longer used`);
+            for (const k of ['look', 'own']) if (typeof l.solve?.[k] !== 'string' || !l.solve[k].trim()) fail(`${where}: solve.${k} is empty`);
             const page = fs.readFileSync(`lessons/course-2/${l.n}.html`, 'utf8');
-            if (page.includes('-start.sb3') || page.includes('-solution.sb3')) fail(`${where}: page links to a missing practice file`);
+            if (!page.includes(`../games/${l.file}`)) fail(`${where}: page has no demo game link`);
+            if (!page.includes(`../practice/${l.file.replace('.sb3', '')}-start.sb3`)) fail(`${where}: page has no starter link`);
+            if (page.includes('-solution.sb3')) fail(`${where}: page links to a solution`);
             if (!page.includes(`?course=2&lesson=${l.n}`)) fail(`${where}: page has no teacher link with the course`);
-            if (!page.includes(`../games/${w.file}`)) fail(`${where}: page has no warmup game link`);
           }
           const index = fs.readFileSync('lessons/index.html', 'utf8');
           if (!index.includes('course-2/index.html')) fail('lessons/index.html does not link to course 2');
-          console.log('Courses: 3, lessons: 8 + 8, course 2 warmups and pages OK');
+          console.log('Courses: 3, lessons: 8 + 8, course 2 games and pages OK');
           JS
 
       - name: Check Scratch game packages
@@ -166,6 +166,69 @@ jobs:
                   assert len(opcodes) >= 100, f'{path}: only {len(opcodes)} blocks'
                   assert themed >= 30, f'{path}: only {themed} blocks of the lesson topic'
                   print(f'{path}: {len(project["targets"])} targets, {len(opcodes)} blocks, {themed} on the lesson topic, V Labs badge OK')
+          PY
+
+      - name: Check course 2 games and starters
+        run: |
+          python3 -m py_compile scripts/build-course2.py
+          python3 scripts/build-course2.py --check
+          python3 - <<'PY'
+          import glob, json, zipfile
+          from pathlib import Path
+          STEMS = ['01-chase', '02-platform', '03-maze', '04-catcher',
+                   '05-pursuit', '06-shooter', '07-quest', '08-own-game']
+          games = sorted(glob.glob('lessons/course-2/games/*.sb3'))
+          starts = sorted(glob.glob('lessons/course-2/practice/*-start.sb3'))
+          assert len(games) == 8, f'Expected 8 course 2 games, got {len(games)}'
+          assert len(starts) == 8, f'Expected 8 course 2 starters, got {len(starts)}'
+
+          def load(path, badge_script=True):
+              with zipfile.ZipFile(path) as archive:
+                  project = json.loads(archive.read('project.json'))
+                  names = set(archive.namelist())
+                  assert project['extensions'] == [], f'{path}: unexpected Scratch extensions'
+                  for target in project['targets']:
+                      for asset in target['costumes'] + target['sounds']:
+                          assert asset['md5ext'] in names, f'{path}: missing {asset["md5ext"]}'
+                          if asset['dataFormat'] == 'svg':
+                              svg = archive.read(asset['md5ext']).decode('utf-8')
+                              for unsupported in ('<text', '<filter', 'Gradient', 'rx='):
+                                  assert unsupported not in svg, f'{path}: unsupported SVG feature {unsupported}'
+                      notes = [c['text'] for c in target['comments'].values()]
+                      assert any('V Labs' in text for text in notes), f'{path}: {target["name"]} has no V Labs note'
+                  badge = [t for t in project['targets'] if t['name'] == 'V Labs']
+                  assert len(badge) == 1 and badge[0]['visible'] and badge[0]['costumes'], f'{path}: no V Labs badge sprite'
+                  ops = {b['opcode'] for b in badge[0]['blocks'].values()}
+                  if badge_script:
+                      assert {'event_whenflagclicked', 'looks_show', 'looks_gotofrontback'} <= ops, f'{path}: V Labs badge is not kept on stage'
+                  return project
+
+          def look(project):
+              return [(t['name'], [c['md5ext'] for c in t['costumes']], [s['md5ext'] for s in t['sounds']]) for t in project['targets']]
+
+          for stem in STEMS:
+              game_path = f'lessons/course-2/games/{stem}.sb3'
+              start_path = f'lessons/course-2/practice/{stem}-start.sb3'
+              game, start = load(game_path), load(start_path, badge_script=False)
+              assert look(game) == look(start), f'{stem}: the starter and the game have different sprites, costumes or sounds'
+              for target in start['targets']:
+                  assert not target['blocks'], f'{stem}: the starter has blocks in {target["name"]}'
+                  assert not target['variables'] and not target['lists'] and not target['broadcasts'], f'{stem}: the starter has data in {target["name"]}'
+                  if not target['isStage']:
+                      assert target['visible'], f'{stem}: {target["name"]} is hidden in the starter'
+              notes = ' '.join(c['text'] for t in start['targets'] for c in t['comments'].values())
+              assert 'Заготовка' in notes and 'Что собираем на уроке' in notes, f'{stem}: the starter has no lesson steps'
+              game_notes = ' '.join(c['text'] for t in game['targets'] for c in t['comments'].values())
+              assert 'Игра «' in game_notes, f'{stem}: the game notes are not marked as a demo game'
+              opcodes = [b['opcode'] for t in game['targets'] for b in t['blocks'].values() if not b['shadow']]
+              assert len(opcodes) >= 40, f'{stem}: the game has only {len(opcodes)} blocks'
+              assert not any(op.startswith('procedures_') for op in opcodes), f'{stem}: custom Scratch block'
+              png = Path(f'lessons/course-2/games/{stem}.png')
+              assert png.exists(), f'{stem}: missing game shot'
+              h = png.read_bytes()
+              assert h[1:4] == b'PNG' and int.from_bytes(h[16:20], 'big') == 960 and int.from_bytes(h[20:24], 'big') == 720, f'{png}: must be 960x720'
+              assert len(h) <= 200000, f'{png}: larger than 200 KB'
+              print(f'{stem}: game {len(opcodes)} blocks, starter {len(start["targets"])} targets without program, shot OK')
           PY
 
       - name: Check practice starters and solutions

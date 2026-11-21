@@ -45,7 +45,14 @@ const GAME_DESC = {
   'Калькулятор удачи': 'Случайное число от 1 до 100 — «Ты везунчик!» при > 80.',
   'Угадай число': 'Компьютер загадывает число, ты угадываешь.',
   'Дневник желаний': 'Желания записываются в список: добавляй, вставляй, заменяй, ищи и удаляй клавишами.',
-  'Список покупок': 'Корзина спрашивает покупки и собирает их в список.'
+  'Список покупок': 'Корзина спрашивает покупки и собирает их в список.',
+  'Догонялки': 'Лис ловит звёзды стрелками: за 30 секунд нужно набрать как можно больше очков.',
+  'Платформер': 'Прыжки по платформам: герой бегает, прыгает и собирает монеты.',
+  'Ловец': 'Корзина ловит яблоки и уклоняется от бомб: очки, жизни и таймер на 30 секунд.',
+  'Погоня': 'Лис собирает ключи, а тень идёт за ним: три ключа открывают выход.',
+  'Тир': 'Пушка едет за мышкой, пробел стреляет пулями-клонами по летящим мишеням.',
+  'Приключение': 'Два уровня: в лесу собираем три предмета, в замке ищем дверь.',
+  'Своя игра': 'Меню с именем и выбором скорости, сбор звёзд и погоня тени — две механики в одной игре.'
 };
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -146,19 +153,16 @@ function lessonPage(course, l) {
   const near = (x) => course.n === 1 ? `${x}.html` : `${x}.html`;
 
   const ownGame = !!(l.file && l.games && l.games.length);
-  const warm = l.warmup ? LESSONS.find(x => x.n === l.warmup.n) : null;
   const gameCards = [];
   if (ownGame) {
     l.games.forEach((g, gi) => {
       gameCards.push(`<div class="game"><b>${esc(g)}</b><p>${esc(GAME_DESC[g] || '')}</p>${gi === 0 ? `<a class="btn" href="${gameHref(l.file)}" download>Скачать игру для Scratch (.sb3)</a><p class="download-note">Открой файл в Scratch 3.0: Файл → Загрузить с компьютера. Проект отмечен знаком V Labs, подсказки по клавишам — в заметках рядом с блоками.</p>` : ''}</div>`);
     });
-  } else if (warm) {
-    const g = warm.games[Math.max(0, +l.warmup.game || 0)] || warm.games[0];
-    gameCards.push(`<div class="game"><b>Разминка: «${esc(g)}»</b><p>${esc(GAME_DESC[g] || '')}</p><a class="btn ghost" href="${gameHref(warm.file)}" download>Скачать игру «${esc(g)}» (.sb3)</a><p class="download-note">Это игра курса 1. С неё начинается письмо «Готовимся к уроку»: ребёнок вспоминает механику, а новую игру собирает на уроке.</p></div>`);
   }
 
+
   const practice = l.file && l.work
-    ? `<div class="card"><h2>Практика на уроке</h2><ul>${list(l.practice)}</ul><a class="btn" href="${practiceHref(`${l.file.replace('.sb3', '')}-start.sb3`)}" download>Скачать заготовку «${esc(l.work)}» (.sb3)</a><p class="download-note">В заготовке есть герои, фоны и звуки, программы нет. Шаги практики записаны в заметке — там, где собирают блоки. Готовый проект ученик получает после урока, если попросит: преподаватель отправляет ему письмо «Разгадка».</p></div>`
+    ? `<div class="card"><h2>Практика на уроке</h2><ul>${list(l.practice)}</ul><a class="btn" href="${practiceHref(`${l.file.replace('.sb3', '')}-start.sb3`)}" download>Скачать заготовку «${esc(l.work)}» (.sb3)</a><p class="download-note">В заготовке есть герои, фоны и звуки, программы нет. Шаги практики записаны в заметке — там, где собирают блоки. ${l.course > 1 ? 'Разгадка — это демо-игра урока: соберите её на занятии.' : 'Готовый проект ученик получает после урока, если попросит: преподаватель отправляет ему письмо «Разгадка».'}</p></div>`
     : `<div class="card"><h2>Практика на уроке</h2><ul>${list(l.practice)}</ul><p class="download-note">Практику собираем на уроке в Scratch. Заготовка и разгадка появятся вместе с демо-игрой этого урока.</p></div>`;
 
   const nav = `<nav class="pager" aria-label="Соседние уроки">${prev ? `<a rel="prev" href="${near(prev.n)}"><small>← Предыдущий урок</small>Урок ${prev.n}. ${esc(prev.title)}</a>` : `<a href="index.html"><small>← К началу курса</small>${esc(course.title)}</a>`}${next ? `<a class="next" rel="next" href="${near(next.n)}"><small>Следующий урок →</small>Урок ${next.n}. ${esc(next.title)}</a>` : `<a class="next" href="${course.n === 1 ? 'index.html' : '../index.html'}"><small>${course.n === 1 ? 'Курс пройден →' : 'К списку курсов →'}</small>${course.n === 1 ? 'Все уроки и игры' : 'Уроки и игры'}</a>`}</nav>
@@ -167,10 +171,10 @@ function lessonPage(course, l) {
 
   const title = course.n === 1 ? `Урок ${l.n}. ${esc(l.title)} · V-labs` : `Урок ${l.n}. ${esc(l.title)} · ${esc(course.title)} · V-labs`;
   const h1 = course.n === 1 ? `Урок ${l.n}. ${esc(l.title)}` : `Урок ${l.n}. ${esc(l.title)} <span class="badge">${esc(course.short)}</span>`;
-  const gamesHeading = ownGame ? 'Игры, которые собираем' : warm ? 'Разминка перед уроком' : 'Игра урока';
+  const gamesHeading = course.n > 1 ? 'Демо-игра урока' : 'Игры, которые собираем';
   const gamesBlock = gameCards.length
     ? `<div class="card"><h2>${gamesHeading}</h2>${gameCards.join('')}</div>`
-    : `<div class="card"><h2>Игра урока</h2><p style="margin:0;color:var(--muted);font-size:14px">Демо-игра этого урока ещё не опубликована: в письме «Готовимся к уроку» пока используется разминка из курса 1.</p></div>`;
+    : `<div class="card"><h2>Игра урока</h2><p style="margin:0;color:var(--muted);font-size:14px">Демо-игра этого урока ещё не опубликована.</p></div>`;
   const footer = course.n === 1
     ? `V-labs · Scratch 3.0 · Урок ${l.n} из ${course.lessons.length}`
     : `V-labs · Scratch 3.0 · ${esc(course.title)} · Урок ${l.n} из ${course.lessons.length}`;
@@ -199,12 +203,12 @@ for (const course of COURSES) {
 // Страница курса 2: программа без скачиваемых игр — они появятся отдельным релизом.
 const course2 = COURSES.find(c => c.n === 2);
 if (course2) {
-  const rows = course2.lessons.map(l => `<li class="plain"><a class="row" href="${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><span class="dl soon">Практика <b>«${esc(l.work)}»</b></span></li>`).join('');
+  const rows = course2.lessons.map(l => `<li><a class="row" href="${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><a class="dl" href="games/${l.file}" download title="${esc(GAME_DESC[l.games[0]] || '')}">Скачать игру <b>«${esc(l.games[0])}»</b></a></li>`).join('');
   files.push([`course-2/index.html`, `${head('Курс 2. Разработка игр · V-labs', { prefix: '../../', homeHref: '../index.html' })}
 <h1>Курс 2. Разработка игр</h1>
-<p class="goal">Восемь уроков — восемь игровых механик. На каждом уроке новая мини-игра, а в письме «Готовимся к уроку» — разминка в игре курса 1 и три шага подготовки.</p>
+<p class="goal">Восемь уроков — восемь игровых механик. У каждого урока есть демо-игра: в неё играем до урока, её же собираем на занятии. К каждой игре — заготовка с героями и фонами.</p>
 <ol class="list" id="games">${rows}</ol>
-<p class="download-note">Демо-игры и заготовки курса 2 появятся отдельным релизом. Пока на страницах уроков — блоки, практика и ключевая идея, а письма собираются из текстов уроков и разминки.</p>
+<p class="download-note">Игра и заготовка — файлы .sb3. Откройте их в Scratch 3.0: Файл → Загрузить с компьютера. <a href="${SCRATCH}" target="_blank" rel="noopener">Открыть редактор Scratch</a></p>
 <p class="download-note"><a href="../1.html">← Курс 1. Основы Scratch</a></p>
 <footer>V-labs · Scratch 3.0 · ${esc(course2.title)} · ${course2.lessons.length} уроков</footer>
 </main></body></html>
@@ -214,11 +218,11 @@ if (course2) {
 // Оглавление: три курса. Курс 1 — игры и страницы уроков, курс 2 — программа, курс 3 — следующий этап.
 const course1 = COURSES.find(c => c.n === 1);
 const rows1 = course1.lessons.map(l => `<li><a class="row" href="${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><a class="dl" href="games/${l.file}" download title="${esc(GAME_DESC[l.games[0]] || '')}">Скачать игру <b>«${esc(l.games[0])}»</b></a></li>`).join('');
-const rows2 = course2 ? course2.lessons.map(l => `<li class="plain"><a class="row" href="course-2/${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><span class="dl soon">Практика <b>«${esc(l.work)}»</b></span></li>`).join('') : '';
+const rows2 = course2 ? course2.lessons.map(l => `<li><a class="row" href="course-2/${l.n}.html"><span class="num">${l.n}</span><span><b>${esc(l.title)}</b><small>${esc(l.goal)}</small></span></a><a class="dl" href="course-2/games/${l.file}" download title="${esc(GAME_DESC[l.games[0]] || '')}">Скачать игру <b>«${esc(l.games[0])}»</b></a></li>`).join('') : '';
 const course3 = COURSES.find(c => c.n === 3);
 files.push(['index.html', `${head('Уроки и игры Scratch · V-labs', { prefix: '../', homeHref: 'index.html' })}
 <h1>Уроки и игры Scratch</h1>
-<p class="goal">Три курса: основы Scratch, разработка игр и своя игра. Уроки курса 1 — со скачиваемыми играми и страницами; курс 2 пока в виде программы.</p>
+<p class="goal">Три курса: основы Scratch, разработка игр и своя игра. В первых двух курсах у каждого урока — демо-игра, заготовка и страница с практикой.</p>
 <section class="course">
 <h2>Курс 1. Основы Scratch</h2>
 <p class="goal">Восемь групп блоков. У каждого урока — страница с блоками и практикой и готовая игра для Scratch 3.0.</p>
