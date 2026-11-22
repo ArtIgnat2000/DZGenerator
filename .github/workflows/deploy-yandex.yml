@@ -1,0 +1,71 @@
+# Деплой статического сайта в Yandex Object Storage.
+# Настраивается по шагам из ДЕПЛОЙ-ЯНДЕКС.md, раздел 2.
+# Пока в репозитории нет секретов (YC_ACCESS_KEY_ID, YC_SECRET_ACCESS_KEY, YC_BUCKET),
+# job пропускается: сайт продолжает жить на GitHub Pages / SourceCraft Sites.
+name: Deploy to Yandex Object Storage
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yandex-storage
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.YC_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ru-central1
+      BUCKET: ${{ secrets.YC_BUCKET }}
+      ENDPOINT: https://storage.yandexcloud.net
+    steps:
+      - name: Check deploy keys
+        id: keys
+        run: |
+          if [ -z "$BUCKET" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Секреты Яндекс Облака не заданы — деплой пропущен."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.keys.outputs.ready == 'true'
+        uses: actions/checkout@v4
+
+      - name: Install AWS CLI
+        if: steps.keys.outputs.ready == 'true'
+        run: pip install --quiet awscli
+
+      # Содержимое бакета = содержимое репозитория, как у GitHub Pages.
+      # --delete убирает файлы, которых больше нет в репозитории; исключённые
+      # (.git, .github, *.html) он не трогает — их везёт следующий шаг.
+      # Картинки, .sb3 и остальное кешируются надолго: имена файлов постоянные.
+      - name: Sync assets
+        if: steps.keys.outputs.ready == 'true'
+        run: |
+          aws s3 sync . "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --delete \
+            --exclude ".git/*" --exclude ".github/*" --exclude "*.html" \
+            --cache-control "public, max-age=604800"
+
+      # HTML не кешируем: номер версии в шапке должен меняться сразу после релиза.
+      - name: Sync HTML
+        if: steps.keys.outputs.ready == 'true'
+        run: |
+          aws s3 sync . "s3://$BUCKET/" \
+            --endpoint-url "$ENDPOINT" \
+            --exclude "*" --include "*.html" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      - name: Summary
+        if: steps.keys.outputs.ready == 'true'
+        run: echo "Сайт выложен в бакет $BUCKET" >> "$GITHUB_STEP_SUMMARY"

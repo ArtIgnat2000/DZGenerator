@@ -1,0 +1,7 @@
+# SourceCraft Sites: https://<слаг-организации>.sourcecraft.site/DZGenerator
+# Публикуется статика из публичного репозитория публичной организации.
+# Сайт — это весь репозиторий: index.html перенаправляет на V-labs-generator.html.
+# Подробности и ограничения: ДЕПЛОЙ-ЯНДЕКС.md, раздел 1.
+site:
+  root: "."
+  ref: "main"
